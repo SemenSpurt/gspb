@@ -4,12 +4,9 @@ defmodule FeedWeb.Schema do
   alias FeedWeb.{
     RouteResolver,
     StopResolver,
-    TripResolver,
-    # DateResolver
+    TripResolver
   }
-  # alias Feed.Stops
-  # alias Feed.Trips
-  # import Absinthe.Resolution.Helpers, only: [dataloader: 1]
+
 
   object :route do
     field :route_id, :integer
@@ -33,12 +30,14 @@ defmodule FeedWeb.Schema do
     field :location_type, :integer
     field :wheelchair_boarding, :integer
     field :transport_type, :string
+    field :stop, :stop
   end
 
   object :trip do
     field :trip_id, :integer
     field :route_id, :integer
     field :service_id, :integer
+    # field :stops, :stop
     field :times, list_of(:time)
   end
 
@@ -62,13 +61,18 @@ defmodule FeedWeb.Schema do
     field :route_id, :integer
     field :route_short_name, :string
     field :route_long_name, :string
-    field :dates, list_of(:date)
+    field :dates, list_of(:trip_dates)
+  end
+
+  object :trip_dates do
+    field :service_id, :integer
+    # field :date, :string
   end
 
   object :date do
     field :service_id, :integer
     field :date, :string
-    field :trips, list_of(:only_trips)#, resolve: assoc(:trips)
+    # field :trips, list_of(:only_trips)#, resolve: assoc(:trips)
   end
 
   object :only_trips do
@@ -92,18 +96,18 @@ defmodule FeedWeb.Schema do
       resolve(&RouteResolver.get_route/3)
     end
 
-    @desc "Trips on route by date"
-    field :route_trips, list_of(:route_trips) do
-      arg :route_id, :integer
-      resolve(&RouteResolver.route_trips/3)
-    end
-
     @desc "Trips stops and tracks"
     field :trip_stops, list_of(:trip) do
       arg :trip_id, :integer
       resolve(&TripResolver.trip_stops/3)
     end
 
-  end
+    @desc "Trips on route by date"
+    field :route_trips, list_of(:route_trips) do
+      arg :route_id, :integer
+      arg :date, :string
+      resolve(&RouteResolver.route_trips/3)
+    end
 
+  end
 end

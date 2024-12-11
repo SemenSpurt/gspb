@@ -9,7 +9,7 @@ defmodule FeedWeb.RouteResolver do
     {:ok, Routes.get_route(route_id)}
   end
 
-  def route_trips(_root, %{route_id: route_id}, _info) do
-    {:ok, Routes.route_trips(route_id)}
+  def route_trips(_root, %{route_id: route_id, date: date}, _info) do
+    {:ok, Routes.route_trips(route_id, date)}
   end
 end

@@ -4,12 +4,14 @@ defmodule Feed.Route.Routes do
 
   alias Feed.{
     Route.Trips.Trip,
-    Time.Dates.Date
+    Time.Dates.Date,
+    Time.Week.Days
   }
 
   defmodule Route do
     use Ecto.Schema
     import Ecto.Changeset
+
 
     schema "routes" do
       field :route_id, :integer
@@ -68,10 +70,16 @@ defmodule Feed.Route.Routes do
     # |> Repo.preload([:trips])
   end
 
-  def route_trips(route_id) do
+  def route_trips(route_id, date) do
     query =
       from r in Route,
         where: r.route_id == ^route_id,
+        join: trip in Trip,
+        on: trip.route_id == r.route_id,
+        join: d in Days,
+        on: d.service_id == trip.service_id,
+        # where: ^date between (d.end_dateб d.start_date),
+
         preload: [dates: [:trips]]
 
     Repo.all(query)

@@ -43,9 +43,6 @@ defmodule Feed.Route.Trips do
   def get_trip!(id), do: Repo.get!(Trip, id)
 
   def trip_stops(trip_id) do
-    # Repo.all(Trip)
-    # |> Enum.find(fn(item) -> Map.get(item, :trip_id) === trip_id end)
-    # |> Repo.preload([:shapes, times: [:stop, :shapes]])
     query =
       from tr in Trip,
         where: tr.trip_id == ^trip_id,
