@@ -1,5 +1,5 @@
 defmodule FeedWeb.RouteResolver do
-  alias Feed.Routes
+  alias Feed.Route.Routes
 
   def list_routes(_root, _args, _info) do
     {:ok, Routes.list_routes()}

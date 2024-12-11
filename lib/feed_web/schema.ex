@@ -68,7 +68,7 @@ defmodule FeedWeb.Schema do
   object :date do
     field :service_id, :integer
     field :date, :string
-    field :trips, list_of(:only_trips)
+    field :trips, list_of(:only_trips)#, resolve: assoc(:trips)
   end
 
   object :only_trips do
@@ -77,12 +77,12 @@ defmodule FeedWeb.Schema do
 
   query do
     @desc "All stops"
-    field :list_stops, non_null(list_of(non_null(:stop))) do
+    field :list_stops, list_of(:stop) do
       resolve(&StopResolver.list_stops/3)
     end
 
     @desc "All routes"
-    field :list_routes, non_null(list_of(non_null(:route))) do
+    field :list_routes, list_of(:route) do
       resolve(&RouteResolver.list_routes/3)
     end
 
@@ -93,13 +93,13 @@ defmodule FeedWeb.Schema do
     end
 
     @desc "Trips on route by date"
-    field :trips_on_route, :route_trips do
+    field :route_trips, list_of(:route_trips) do
       arg :route_id, :integer
       resolve(&RouteResolver.route_trips/3)
     end
 
     @desc "Trips stops and tracks"
-    field :trip_stops, :trip do
+    field :trip_stops, list_of(:trip) do
       arg :trip_id, :integer
       resolve(&TripResolver.trip_stops/3)
     end
