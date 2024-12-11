@@ -1,4 +1,4 @@
-defmodule Feed.StopsFixtures do
+defmodule Feed.Place.StopsFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Stops` context.
@@ -20,7 +20,7 @@ defmodule Feed.StopsFixtures do
         transport_type: "some transport_type",
         wheelchair_boarding: 42
       })
-      |> Feed.Stops.create_stop()
+      |> Feed.Place.Stops.create_stop()
 
     stop
   end

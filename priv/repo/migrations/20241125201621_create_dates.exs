@@ -4,7 +4,7 @@ defmodule Feed.Repo.Migrations.CreateDates do
   def change do
     create table(:dates) do
       add :service_id, :integer
-      add :date, :string
+      add :date, :date
       add :exception_type, :integer
 
       timestamps(type: :utc_datetime)

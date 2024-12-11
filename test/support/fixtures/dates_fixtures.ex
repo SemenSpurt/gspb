@@ -1,4 +1,4 @@
-defmodule Feed.DatesFixtures do
+defmodule Feed.Time.DatesFixtures do
   @doc """
   Generate a date.
   """
@@ -10,7 +10,7 @@ defmodule Feed.DatesFixtures do
         exception_type: 42,
         service_id: 42
       })
-      |> Feed.Dates.create_date()
+      |> Feed.Time.Dates.create_date()
 
     date
   end

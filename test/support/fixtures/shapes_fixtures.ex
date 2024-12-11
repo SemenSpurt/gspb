@@ -1,4 +1,4 @@
-defmodule Feed.ShapesFixtures do
+defmodule Feed.Place.ShapesFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Shapes` context.
@@ -17,7 +17,7 @@ defmodule Feed.ShapesFixtures do
         shape_pt_lon: 120.5,
         shape_pt_sequence: 42
       })
-      |> Feed.Shapes.create_shape()
+      |> Feed.Place.Shapes.create_shape()
 
     shape
   end

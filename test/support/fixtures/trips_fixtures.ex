@@ -1,4 +1,4 @@
-defmodule Feed.TripsFixtures do
+defmodule Feed.Route.TripsFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Trips` context.
@@ -17,7 +17,7 @@ defmodule Feed.TripsFixtures do
         shape_id: "some shape_id",
         trip_id: 42
       })
-      |> Feed.Trips.create_trip()
+      |> Feed.Route.Trips.create_trip()
 
     trip
   end

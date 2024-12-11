@@ -1,4 +1,4 @@
-defmodule Feed.WeekFixtures do
+defmodule Feed.Time.WeekFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Week` context.
@@ -23,7 +23,7 @@ defmodule Feed.WeekFixtures do
         tuesday: true,
         wednesday: true
       })
-      |> Feed.Week.create_days()
+      |> Feed.Time.Week.create_days()
 
     days
   end

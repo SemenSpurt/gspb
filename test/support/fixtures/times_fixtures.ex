@@ -1,4 +1,4 @@
-defmodule Feed.TimesFixtures do
+defmodule Feed.Time.TimesFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Times` context.
@@ -19,7 +19,7 @@ defmodule Feed.TimesFixtures do
         stop_sequence: 42,
         trip_id: 42
       })
-      |> Feed.Times.create_time()
+      |> Feed.Time.Times.create_time()
 
     time
   end

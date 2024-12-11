@@ -1,4 +1,4 @@
-defmodule Feed.FreqsFixtures do
+defmodule Feed.Time.FreqsFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Freqs` context.
@@ -17,7 +17,7 @@ defmodule Feed.FreqsFixtures do
         start_time: ~T[14:00:00],
         trip_id: 42
       })
-      |> Feed.Freqs.create_freq()
+      |> Feed.Time.Freqs.create_freq()
 
     freq
   end

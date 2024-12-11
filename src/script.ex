@@ -9,11 +9,11 @@ alias Feed.Week.Days
 
 defmodule LoadDatabase do
   alias CSV
-  def get_headers(filepath) do
+  def get_Records(filepath) do
     File.stream!(filepath, read_ahead: 0)
     |> CSV.decode!(headers: true)
-    |> Enum.fetch!(0)
-    |> Map.keys()
+    # |> Enum.fetch!(0)
+    # |> Map.keys()
   end
 
   tables = %{

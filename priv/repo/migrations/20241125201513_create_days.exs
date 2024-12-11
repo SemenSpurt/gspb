@@ -3,7 +3,7 @@ defmodule Feed.Repo.Migrations.CreateDays do
 
   def change do
     create table(:days) do
-      add :service_id, :string
+      add :service_id, :integer
       add :monday, :boolean, default: false, null: false
       add :tuesday, :boolean, default: false, null: false
       add :wednesday, :boolean, default: false, null: false

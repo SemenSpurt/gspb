@@ -1,10 +1,10 @@
 defmodule Feed.ShapesTest do
   use Feed.DataCase
 
-  alias Feed.Shapes
+  alias Feed.Place.Shapes
 
   describe "shapes" do
-    alias Feed.Shapes.Shape
+    alias Feed.Place.Shapes.Shape
 
     import Feed.ShapesFixtures
 

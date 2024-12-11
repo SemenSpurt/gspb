@@ -1,4 +1,4 @@
-defmodule Feed.RoutesFixtures do
+defmodule Feed.Route.RoutesFixtures do
   @moduledoc """
   This module defines test helpers for creating
   entities via the `Feed.Routes` context.
@@ -21,7 +21,7 @@ defmodule Feed.RoutesFixtures do
         transport_type: 42,
         urban: true
       })
-      |> Feed.Routes.create_route()
+      |> Feed.Route.Routes.create_route()
 
     route
   end
