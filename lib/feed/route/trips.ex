@@ -6,8 +6,10 @@ defmodule Feed.Route.Trips do
   alias Feed.{
     Time.Times.Time,
     Time.Week.Days,
+    Time.Dates.Date,
     Place.Shapes.Shape,
     Route.Routes.Route
+
   }
 
   defmodule Trip do
@@ -65,6 +67,9 @@ defmodule Feed.Route.Trips do
         on: d.service_id == trip.service_id,
         where: d.start_date >= ^date,
         where: d.end_date <= ^date,
+        join: dt in Date,
+        on: dt.service_id == d.service_id,
+        where: dt.exception_type != 2,
 
         preload: [:route, :days]
         # preload: [:dates]

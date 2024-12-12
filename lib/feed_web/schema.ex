@@ -91,6 +91,5 @@ defmodule FeedWeb.Schema do
       arg :date, :string
       resolve(&TripResolver.route_trips!/3)
     end
-
   end
 end

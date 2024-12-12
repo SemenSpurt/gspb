@@ -50,7 +50,7 @@ mix run utils/seed.ex
 
 ## List trips by route and date (e.g. route_id=223, date="2010-04-29")
 {
-  routeTrips(routeId: 223, date: "2010-04-29") {
+  routeTrips(routeId: 223, date: "2024-04-29") {
     routeId
     trip_id
     service_id
