@@ -5,7 +5,9 @@ defmodule Feed.Route.Trips do
 
   alias Feed.{
     Time.Times.Time,
-    Place.Shapes.Shape
+    Time.Week.Days,
+    Place.Shapes.Shape,
+    Route.Routes.Route
   }
 
   defmodule Trip do
@@ -13,8 +15,10 @@ defmodule Feed.Route.Trips do
     import Ecto.Changeset
 
     schema "trips" do
-      field :route_id, :integer
-      field :service_id, :integer
+      # field :route_id, :integer
+      belongs_to :route, Route, foreign_key: :route_id, references: :route_id
+      belongs_to :days, Days, foreign_key: :service_id, references: :service_id
+      # field :service_id, :integer
       field :trip_id, :integer
       field :direction_id, :boolean, default: false
       field :shape_id, :string
@@ -49,6 +53,23 @@ defmodule Feed.Route.Trips do
         preload: [times: [:stop, :shapes]]
 
       Feed.Repo.all(query)
+  end
+
+  def route_trips(route_id, date) do
+    query =
+      from trip in Trip,
+        join: r in Route,
+        on: r.route_id == ^route_id,
+        where: trip.route_id == ^route_id,
+        join: d in Days,
+        on: d.service_id == trip.service_id,
+        where: d.start_date >= ^date,
+        where: d.end_date <= ^date
+
+        # preload: [:route]
+        # preload: [:dates]
+
+    Repo.all(query)
   end
 
 

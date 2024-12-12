@@ -30,14 +30,12 @@ defmodule FeedWeb.Schema do
     field :location_type, :integer
     field :wheelchair_boarding, :integer
     field :transport_type, :string
-    field :stop, :stop
   end
 
   object :trip do
     field :trip_id, :integer
     field :route_id, :integer
     field :service_id, :integer
-    # field :stops, :stop
     field :times, list_of(:time)
   end
 
@@ -57,27 +55,18 @@ defmodule FeedWeb.Schema do
     field :shape_pt_sequence, :integer
   end
 
+
+
   object :route_trips do
-    field :route_id, :integer
-    field :route_short_name, :string
-    field :route_long_name, :string
-    field :dates, list_of(:trip_dates)
+    field :trip, :trip
   end
 
-  object :trip_dates do
-    field :service_id, :integer
-    # field :date, :string
-  end
 
   object :date do
     field :service_id, :integer
     field :date, :string
-    # field :trips, list_of(:only_trips)#, resolve: assoc(:trips)
   end
 
-  object :only_trips do
-    field :trip_id, :integer
-  end
 
   query do
     @desc "All stops"
@@ -106,7 +95,7 @@ defmodule FeedWeb.Schema do
     field :route_trips, list_of(:route_trips) do
       arg :route_id, :integer
       arg :date, :string
-      resolve(&RouteResolver.route_trips/3)
+      resolve(&TripResolver.route_trips/3)
     end
 
   end

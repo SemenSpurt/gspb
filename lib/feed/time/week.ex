@@ -6,7 +6,7 @@ defmodule Feed.Time.Week do
   defmodule Days do
     use Ecto.Schema
     import Ecto.Changeset
-    alias Feed.Trips.Trip
+    alias Feed.Route.Trips.Trip
 
     schema "days" do
       field :service_id, :integer
