@@ -4,6 +4,76 @@
 
 mix run utils/seed.ex
 
+## List routes
+{
+  listRoutes {
+    agencyId
+    circular
+    night
+    routeId
+    routeLongName
+    routeShortName
+    routeType
+    transportType
+    urban
+  }
+}
+
+## List stops
+{
+  listStops {
+    locationType
+    stopCode
+    stopId
+    stopLat
+    stopLon
+    stopName
+    transportType
+    wheelchairBoarding
+  }
+}
+
+## Get route by id (e.g. id=223)
+{
+  getRoute(routeId:223) {
+    agencyId
+    circular
+    night
+    routeId
+    routeLongName
+    routeShortName
+    routeType
+    transportType
+    urban
+  }
+}
+
+## List stops and trajectories for specific trip (e.g. trip_id=65019644)
+
+{
+  tripStops(tripId: 65019644) {
+    routeId
+    serviceId
+    tripId
+    times {
+      arrivalTime
+      shapeId
+      stopId
+      stopSequence
+      stop {
+        stopName
+      }
+      shapes {
+        shapeId
+        shapePtLat
+        shapePtLon
+        shapePtSequence
+      }
+    }
+  }
+}
+
+
 
 To start your Phoenix server:
 
