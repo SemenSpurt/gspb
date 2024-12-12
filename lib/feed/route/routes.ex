@@ -70,39 +70,6 @@ defmodule Feed.Route.Routes do
     # |> Repo.preload([:trips])
   end
 
-  # def route_trips(route_id, date) do
-  #   query =
-  #     from r in Route,
-  #       where: r.route_id == ^route_id,
-  #       join: trip in Trip,
-  #       on: trip.route_id == r.route_id,
-  #       join: d in Days,
-  #       on: d.service_id == trip.service_id,
-  #       where: d.start_date >= ^date,
-  #       where: d.end_date <= ^date,
-
-  #       # preload: [dates: [:trips]]
-  #       preload: [:dates]
-
-  #   Repo.all(query)
-  # end
-
-  def route_trips(route_id, date) do
-    query =
-      from trip in Trip,
-        where: trip.route_id == ^route_id,
-        join: d in Days,
-        on: d.service_id == trip.service_id,
-        where: d.start_date >= ^date,
-        where: d.end_date <= ^date,
-
-        # preload: [dates: [:trips]]
-        preload: [:dates]
-
-    Repo.all(query)
-  end
-
-
 
   def get_route(route_id) do
     Repo.all(Route)

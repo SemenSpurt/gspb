@@ -18,7 +18,6 @@ defmodule FeedWeb.Schema do
     field :circular, :boolean
     field :urban, :boolean
     field :night, :boolean
-
   end
 
   object :stop do
@@ -57,11 +56,6 @@ defmodule FeedWeb.Schema do
 
 
 
-  object :route_trips do
-    field :trip, :trip
-  end
-
-
   object :date do
     field :service_id, :integer
     field :date, :string
@@ -92,10 +86,10 @@ defmodule FeedWeb.Schema do
     end
 
     @desc "Trips on route by date"
-    field :route_trips, list_of(:route_trips) do
+    field :route_trips, list_of(:trip) do
       arg :route_id, :integer
       arg :date, :string
-      resolve(&TripResolver.route_trips/3)
+      resolve(&TripResolver.route_trips!/3)
     end
 
   end

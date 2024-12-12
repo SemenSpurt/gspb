@@ -64,9 +64,9 @@ defmodule Feed.Route.Trips do
         join: d in Days,
         on: d.service_id == trip.service_id,
         where: d.start_date >= ^date,
-        where: d.end_date <= ^date
+        where: d.end_date <= ^date,
 
-        # preload: [:route]
+        preload: [:route, :days]
         # preload: [:dates]
 
     Repo.all(query)
