@@ -17,7 +17,9 @@ defmodule Feed.Time.Dates do
       field :date,           :date
       field :exception_type, :integer
 
-      has_many :trips, Trip, foreign_key: :service_id, references: :service_id
+      has_many :trips, Trip,
+        foreign_key: :service_id,
+        references: :service_id
 
       timestamps(type: :utc_datetime)
     end

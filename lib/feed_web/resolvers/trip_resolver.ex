@@ -7,6 +7,5 @@ defmodule FeedWeb.TripResolver do
 
   def route_trips!(_root, %{route_id: route_id, date: date}, _info) do
     {:ok, Trips.route_trips(route_id, date)}
-    # Trips.route_trips(route_id, date)
   end
 end

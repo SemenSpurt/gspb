@@ -55,13 +55,6 @@ defmodule FeedWeb.Schema do
   end
 
 
-
-  object :date do
-    field :service_id, :integer
-    field :date, :string
-  end
-
-
   query do
     @desc "All stops"
     field :list_stops, list_of(:stop) do

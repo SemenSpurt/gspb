@@ -75,7 +75,6 @@ defmodule Feed.Time.Week do
       Enum.map(records, fn [service_id, monday, tuesday, wednesday,
       thursday, friday, saturday, sunday, start_date, end_date, service_name] ->
         %{
-
           :service_id   => String.to_integer(service_id),
           :monday       => monday == "1",
           :tuesday      => tuesday == "1",
