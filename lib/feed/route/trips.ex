@@ -61,22 +61,23 @@ defmodule Feed.Route.Trips do
 
     dayOfWeek = date |> Dt.from_iso8601! |> CalenDate.day_of_week_name |> String.downcase |> String.to_atom
 
-    subquery =
+    schedule =
       from service in Days,
         where: field(service, ^dayOfWeek) == true,
-        select: service.service_name,
-        distinct: [service.service_name]
+        where: service.start_date >= ^date and service.end_date <= ^date,
+        select: service.service_id
+
+    service =
+      from dt in Date,
+        where: dt.service_id in subquery(schedule),
+        where: dt.exception_type == 2,
+        where: dt.date == ^date,
+        select: dt.service_id
 
     query =
       from trip in Trip,
         where: trip.route_id == ^route_id,
-        join: d in Days,
-        on: d.service_id == trip.service_id,
-        where: d.service_name in subquery(subquery),
-        where: d.start_date >= ^date and d.end_date <= ^date,
-        join: dt in Date,
-        on: dt.service_id == d.service_id,
-        where: dt.exception_type != 2
+        where: trip.service_id not in subquery(service)
 
         # preload: [:times]
 
