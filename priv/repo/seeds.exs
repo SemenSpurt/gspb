@@ -14,16 +14,17 @@
 #   Routes,
 #   Trips
 # }
+
 # alias Feed.Place.{
-#   Stops,
 #   Shapes
+#   Stops,
 # }
 
 # alias Feed.Time.{
 #   Dates,
 #   Freqs,
-#   Week,
 #   Times
+#   Week,
 # }
 
 
@@ -54,7 +55,6 @@
 #   |> File.stream!()
 #   |> Stream.chunk_every(1000)
 #   |> Enum.map(&Parser.parse_stream(&1) |> model.import())
-
 # end)
 
 # File.ls!("src/feed")

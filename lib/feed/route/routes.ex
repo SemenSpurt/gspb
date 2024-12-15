@@ -3,9 +3,8 @@ defmodule Feed.Route.Routes do
   alias Feed.Repo
 
   alias Feed.{
-    Route.Trips.Trip,
     Time.Dates.Date,
-    Time.Week.Days
+    Route.Trips.Trip,
   }
 
   defmodule Route do
@@ -20,17 +19,20 @@ defmodule Feed.Route.Routes do
       field :route_long_name, :string
       field :route_type, :integer
       field :transport_type, :string
-      field :circular, :boolean, default: false
-      field :urban, :boolean, default: false
-      field :night, :boolean, default: false
+      field :circular, :boolean
+      field :urban, :boolean
+      field :night, :boolean
 
-      has_many :trips, Trip, foreign_key: :route_id, references: :route_id
+      has_many :trips, Trip,
+        foreign_key: :route_id,
+        references: :route_id
 
-      # has_many :dates, through: [:trips, :service_id]
       many_to_many :dates, Date,
         join_through: Trip,
-        join_keys: [route_id: :route_id, service_id: :service_id],
-        # unique: true,
+        join_keys: [
+          route_id: :route_id,
+          service_id: :service_id
+        ],
         preload_order: [asc: :date]
 
       timestamps(type: :utc_datetime)
@@ -67,14 +69,12 @@ defmodule Feed.Route.Routes do
 
   def list_routes do
     Repo.all(Route)
-    # |> Repo.preload([:trips])
   end
 
 
   def get_route(route_id) do
     Repo.all(Route)
     |> Enum.find(fn(item) -> Map.get(item, :route_id) === route_id end)
-    # |> Repo.preload([:trips])
   end
 
   def create_route(attrs \\ %{}) do
@@ -103,22 +103,30 @@ defmodule Feed.Route.Routes do
     Route
     |> Repo.insert_all(
       Enum.map(records, fn [
-        route_id, agency_id, route_short_name, route_long_name, route_type,
-        transport_type, circular, urban, night] ->
-        %{
-          :route_id           => String.to_integer(route_id),
-          :agency_id          => agency_id,
-          :route_short_name   => route_short_name,
-          :route_long_name    => route_long_name,
-          :route_type         => String.to_integer(route_type),
-          :transport_type     => transport_type,
-          :circular           => circular == "1",
-          :urban              => urban == "1",
-          :night              => night == "1",
+        route_id,
+        agency_id,
+        route_short_name,
+        route_long_name,
+        route_type,
+        transport_type,
+        circular,
+        urban,
+        night
+      ] ->
+      %{
+        :route_id           => String.to_integer(route_id),
+        :agency_id          => agency_id,
+        :route_short_name   => route_short_name,
+        :route_long_name    => route_long_name,
+        :route_type         => String.to_integer(route_type),
+        :transport_type     => transport_type,
+        :circular           => circular == "1",
+        :urban              => urban == "1",
+        :night              => night == "1",
 
-          :inserted_at  => DateTime.utc_now(:second),
-          :updated_at   => DateTime.utc_now(:second)
-        }
+        :inserted_at        => DateTime.utc_now(:second),
+        :updated_at         => DateTime.utc_now(:second)
+      }
       end)
     )
   end

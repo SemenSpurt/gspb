@@ -1,7 +1,11 @@
 defmodule Feed.Time.Times do
-
   import Ecto.Query, warn: false
-  alias Feed.Repo
+
+  alias Feed.{
+    Repo,
+    Place.Stops.Stop,
+    Place.Shapes.Shape,
+  }
 
   alias Time, as: Tm
 
@@ -9,31 +13,46 @@ defmodule Feed.Time.Times do
     use Ecto.Schema
     import Ecto.Changeset
 
-    alias Feed.{
-      Place.Stops.Stop,
-      # Trips.Trip,
-      Place.Shapes.Shape,
-    }
-
     schema "times" do
+      belongs_to :stop, Stop,
+        foreign_key: :stop_id,
+        references: :stop_id
+
       field :trip_id, :integer
-      # belongs_to :trips, Trip, foreign_key: :trip_id, references: :trip_id, define_field: true
       field :arrival_time, :time
       field :departure_time, :time
-      belongs_to :stop, Stop, foreign_key: :stop_id, references: :stop_id, define_field: true
       field :stop_sequence, :integer
       field :shape_id, :string, defaults: nil
       field :shape_dist_traveled, :float
 
-      has_many :shapes, Shape, foreign_key: :shape_id, references: :shape_id, preload_order: [asc: :shape_pt_sequence]
+      has_many :shapes, Shape,
+        foreign_key: :shape_id,
+        references: :shape_id,
+        preload_order: [asc: :shape_pt_sequence]
 
       timestamps(type: :utc_datetime)
     end
 
     def changeset(time, attrs) do
       time
-      |> cast(attrs, [:trip_id, :arrival_time, :departure_time, :stop_id, :stop_sequence, :shape_id, :shape_dist_traveled])
-      |> validate_required([:trip_id, :arrival_time, :departure_time, :stop_id, :stop_sequence, :shape_id, :shape_dist_traveled])
+      |> cast(attrs, [
+        :trip_id,
+        :arrival_time,
+        :departure_time,
+        :stop_id,
+        :stop_sequence,
+        :shape_id,
+        :shape_dist_traveled
+      ])
+      |> validate_required([
+        :trip_id,
+        :arrival_time,
+        :departure_time,
+        :stop_id,
+        :stop_sequence,
+        :shape_id,
+        :shape_dist_traveled
+      ])
     end
   end
 
@@ -81,23 +100,27 @@ defmodule Feed.Time.Times do
   def import(records \\ %{}) do
     Time
     |> Repo.insert_all(
-      Enum.map(records, fn [trip_id, arrival_time, departure_time,
-      stop_id, stop_sequence, shape_id, shape_dist_traveled] ->
-        %{
+      Enum.map(records, fn [
+        trip_id,
+        arrival_time,
+        departure_time,
+        stop_id,
+        stop_sequence,
+        shape_id,
+        shape_dist_traveled
+      ] ->
+      %{
+        :trip_id             => String.to_integer(trip_id),
+        :arrival_time        => Tm.from_seconds_after_midnight(parse_time(arrival_time)),
+        :departure_time      => Tm.from_seconds_after_midnight(parse_time(departure_time)),
+        :stop_id             => String.to_integer(stop_id),
+        :stop_sequence       => String.to_integer(stop_sequence),
+        :shape_id            => shape_id,
+        :shape_dist_traveled => String.to_float(shape_dist_traveled),
 
-          :trip_id             => String.to_integer(trip_id),
-
-          :arrival_time        => Tm.from_seconds_after_midnight(parse_time(arrival_time)),
-          :departure_time      => Tm.from_seconds_after_midnight(parse_time(departure_time)),
-
-          :stop_id             => String.to_integer(stop_id),
-          :stop_sequence       => String.to_integer(stop_sequence),
-          :shape_id            => shape_id,
-          :shape_dist_traveled => String.to_float(shape_dist_traveled),
-
-          :inserted_at         => DateTime.utc_now(:second),
-          :updated_at          => DateTime.utc_now(:second)
-        }
+        :inserted_at         => DateTime.utc_now(:second),
+        :updated_at          => DateTime.utc_now(:second)
+      }
       end)
     )
   end

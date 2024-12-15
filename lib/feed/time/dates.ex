@@ -1,7 +1,10 @@
 defmodule Feed.Time.Dates do
-
   import Ecto.Query, warn: false
-  alias Feed.Repo
+
+  alias Feed.{
+    Repo,
+    Route.Trips.Trip
+  }
 
   alias Date, as: Datedate
 
@@ -10,7 +13,6 @@ defmodule Feed.Time.Dates do
 
     use Ecto.Schema
     import Ecto.Changeset
-    alias Feed.Route.Trips.Trip
 
     schema "dates" do
       field :service_id,     :integer
@@ -27,8 +29,16 @@ defmodule Feed.Time.Dates do
     @doc false
     def changeset(date, attrs) do
       date
-      |> cast(attrs, [:service_id, :date, :exception_type])
-      |> validate_required([:service_id, :date, :exception_type])
+      |> cast(attrs, [
+        :service_id,
+        :date,
+        :exception_type
+      ])
+      |> validate_required([
+        :service_id,
+        :date,
+        :exception_type
+      ])
     end
   end
 
@@ -69,25 +79,29 @@ defmodule Feed.Time.Dates do
 
     Date
     |> Repo.insert_all(
-      Enum.map(records, fn [service_id, date, exception_type] ->
-        %{
+      Enum.map(records, fn [
+        service_id,
+        date,
+        exception_type
+      ] ->
+      %{
 
-          :date => Datedate.from_iso8601!(
-            Enum.at(
-              (for <<
-              y::binary-size(4),
-              m::binary-size(2),
-              d::binary-size(2) <- date
-              >>, do: "#{y}-#{m}-#{d}"), 0
-            )
-          ),
+        :date            => Datedate.from_iso8601!(
+          Enum.at(
+            (for <<
+            y::binary-size(4),
+            m::binary-size(2),
+            d::binary-size(2) <- date
+            >>, do: "#{y}-#{m}-#{d}"), 0
+          )
+        ),
 
-          :exception_type  => String.to_integer(exception_type),
-          :service_id      => String.to_integer(service_id),
+        :exception_type  => String.to_integer(exception_type),
+        :service_id      => String.to_integer(service_id),
 
-          :inserted_at     => DateTime.utc_now(:second),
-          :updated_at      => DateTime.utc_now(:second)
-        }
+        :inserted_at     => DateTime.utc_now(:second),
+        :updated_at      => DateTime.utc_now(:second)
+      }
       end))
   end
 end

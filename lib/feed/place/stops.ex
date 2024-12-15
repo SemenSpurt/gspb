@@ -16,15 +16,13 @@ defmodule Feed.Place.Stops do
       field :location_type, :integer
       field :wheelchair_boarding, :integer
       field :transport_type, :string
-
       timestamps(type: :utc_datetime)
     end
 
     @doc false
     def changeset(stop, attrs) do
       stop
-      |> cast(
-        attrs,
+      |> cast(attrs,
         [
           :stop_id,
           :stop_code,
@@ -92,8 +90,8 @@ defmodule Feed.Place.Stops do
           :wheelchair_boarding => String.to_integer(wheelchair_boarding),
           :transport_type      => transport_type,
 
-          :inserted_at  => DateTime.utc_now(:second),
-          :updated_at   => DateTime.utc_now(:second)
+          :inserted_at         => DateTime.utc_now(:second),
+          :updated_at          => DateTime.utc_now(:second)
         }
       end)
     )

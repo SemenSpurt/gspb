@@ -9,26 +9,30 @@ defmodule Feed.Place.Shapes do
 
     @primary_key false
     schema "shapes" do
-
       field :shape_pt_lat, :float
       field :shape_pt_lon, :float
       field :shape_pt_sequence, :integer
       field :shape_dist_traveled, :float
       field :shape_id, :string, primary_key: true
-
-      # belongs_to :times, Time, foreign_key: :shape_id, references: :shape_id, define_field: true, type: :string, primary_key: true
-      # belongs_to :trips, Trip, foreign_key: :shape_id, references: :shape_id, define_field: true, type: :string, primary_key: true
-
       timestamps(type: :utc_datetime)
     end
 
     def changeset(shape, attrs) do
       shape
-      |> cast(attrs, [:shape_id, :shape_pt_lat, :shape_pt_lon,
-        :shape_pt_sequence, :shape_dist_traveled])
-
-      |> validate_required([:shape_id, :shape_pt_lat, :shape_pt_lon,
-        :shape_pt_sequence, :shape_dist_traveled])
+      |> cast(attrs, [
+        :shape_id,
+        :shape_pt_lat,
+        :shape_pt_lon,
+        :shape_pt_sequence,
+        :shape_dist_traveled
+      ])
+      |> validate_required([
+        :shape_id,
+        :shape_pt_lat,
+        :shape_pt_lon,
+        :shape_pt_sequence,
+        :shape_dist_traveled
+      ])
     end
   end
 
@@ -72,8 +76,8 @@ defmodule Feed.Place.Shapes do
           :shape_pt_sequence   => String.to_integer(shape_pt_sequence),
           :shape_dist_traveled => String.to_float(shape_dist_traveled),
 
-          :inserted_at  => DateTime.utc_now(:second),
-          :updated_at   => DateTime.utc_now(:second)
+          :inserted_at         => DateTime.utc_now(:second),
+          :updated_at          => DateTime.utc_now(:second)
         }
       end)
     )
