@@ -54,17 +54,13 @@ end
   # 554
 
 
-1) Действительно ли во всех записях столбцов ["id", "route_type"]
+1) Действительно ли во всех записях столбца "id"
   содержатся только целочисленные значения?
 
-  [:id, :route_type]
-  |> Enum.map(
-  fn col -> RouteParser.records()
-    |> Enum.map(& &1[col] |> is_integer())
-    |> Enum.all?
-  end)
+  RouteParser.records()
+  |> Enum.all?(& &1[:id] |> is_integer())
 
-  # [true, true]
+  # true
 
 
 1.1) Как много уникальных значений в столбце "id"?
@@ -131,12 +127,12 @@ end
 
 3.3) Какие значения "short_name" повторяются?
 
-RouteParser.records()
-|> Enum.frequencies_by(& &1[:short_name])
-|> Enum.sort_by(fn {_, x} -> x end, :desc)
-|> Enum.filter(fn {_, x} -> x > 1 end)
+  RouteParser.records()
+  |> Enum.frequencies_by(& &1[:short_name])
+  |> Enum.sort_by(fn {_, x} -> x end, :desc)
+  |> Enum.filter(fn {_, x} -> x > 1 end)
 
-# . . .
+  # . . .
 
 
 4) Как много уникальных значений в столбце "long_name"?
@@ -162,15 +158,24 @@ RouteParser.records()
 
 4.2) Какие значения "long_name" повторяются?
 
-RouteParser.records
-|> Enum.frequencies_by(& &1[:long_name])
-|> Enum.sort_by(fn {_, x} -> x end, :desc)
-|> Enum.filter(fn {_, x} -> x > 1 end)
+  RouteParser.records
+  |> Enum.frequencies_by(& &1[:long_name])
+  |> Enum.sort_by(fn {_, x} -> x end, :desc)
+  |> Enum.filter(fn {_, x} -> x > 1 end)
 
-# . . .
+  # . . .
 
 
-5) Какие значения принимает поле "route_type"?
+5) Действительно ли во всех записях столбца "route_type"
+  содержатся только целочисленные значения?
+
+  RouteParser.records()
+  |> Enum.all?(& &1[:route_type] |> is_integer())
+
+  # true
+
+
+5.1) Какие значения принимает поле "route_type"?
 
   RouteParser.records()
   |> Enum.frequencies_by(& &1[:route_type])

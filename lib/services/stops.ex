@@ -242,9 +242,9 @@ end
 
 7) Что такое transport_type и какие значения принимает?
 
-StopParser.records()
-|> Enum.frequencies_by(& &1[:transport_type])
+  StopParser.records()
+  |> Enum.frequencies_by(& &1[:transport_type])
 
-  # %{"bus" => 6316, "tram" => 897, "trolley" => 1344}
+    # %{"bus" => 6316, "tram" => 897, "trolley" => 1344}
 
 """
