@@ -5,6 +5,8 @@ defmodule Feed.Application do
 
   use Application
 
+  NimbleCSV.define(FileParser, separator: ",", escape: "\"")
+
   @impl true
   def start(_type, _args) do
     children = [

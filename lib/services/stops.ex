@@ -1,140 +1,250 @@
-"""
-%{
-  records: 8556!
-
-  stop_id: integer all uniq 8556!
-
-  stop_code: integer all uniq 8556! and -all (except 3) equal :stop_id : drop
-    # [
-    #   {41884, 41870, "МАЛЫЙ ПР. В.О.", {59.93826, 30.23253}, 0, 2, "bus"},
-    #   {41885, 41871, "УЛ. ТКАЧЕЙ", {59.893068, 30.427847}, 0, 2, "bus"},
-    #   {41883, 41869, "МАЛЫЙ ПР. В.О.", {59.94078, 30.22499}, 0, 2, "bus"}
-    # ]
-
-    {
-      "type": "FeatureCollection",
-      "features": [
-      {
-        "type": "Feature",
-        "geometry": {
-            "type": "MultiPoint",
-            "coordinates": [
-              [30.23253, 59.93826],
-              [30.427847,59.893068],
-              [30.22499, 59.94078]
-            ]
-          },
-        "properties": {}
-      }]
-    }
-
-    {"type": "FeatureCollection", "features": [ { "type": "Feature", "properties": { "name": "Point" }, "geometry": { "type": "Point", "coordinates": #{}}}]}
-
-    ##  Somewhere in Iran
-
-  stop_name: string contains commas
-    uniq: 4288!
-    + upcase uniq: 3670!
-    + String.replace(" ", "") uniq: 3601!
-    + String.replace("\"", "") uniq: 3595!
-    + String.replace(",", "") uniq: 3556!
-    + String.replace(".", "") uniq: 3546!
-
-  {lat, lon}: {float, float} coordinates
-    uniq: 8541!
-
-  location_type: integer all equal 0  : drop
-    # %{0 => 8556}!
-
-  wheelchair_boarding: integer  : drop
-    # %{1 => 1, 2 => 8555}!
-
-    # transport_type: %{
-    #   "bus" => 6315,
-    #   "tram" => 897,
-    #   "trolley" => 1344
-    #   }
-}
-"""
-
-
 defmodule StopParser do
-  NimbleCSV.define(Parser, separator: ",", escape: "\"")
 
-  def records do
-    "C:/Users/SamJa/Desktop/Notebooks/feed/stops.txt"
-    |> File.stream!
-    |> Enum.drop(1)
-    |> Parser.parse_stream
-    |> Enum.map(fn [
+  alias FileParser
+
+  # """
+  #   stop_id:             integer,
+  #   stop_code:           integer,
+  #   stop_name:           string,
+  #   stop_lat:            float,
+  #   stop_lon:            float,
+  #   location_type:       integer,
+  #   wheelchair_boarding: integer,
+  #   transport_type:      string
+  # """
+
+
+  def records(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/stops.txt") do
+    file_path
+    |> File.stream!()
+    |> FileParser.parse_stream()
+    |> Enum.map(
+      fn [
         id,
         code,
         name,
-        lat, lon,
-        location_type,
-        wheelchair_boarding,
+        lat,
+        lon,
+        loc_type,
+        chair_board,
         transport_type
-      ] -> {
-        String.to_integer(id),
-        String.to_integer(code),
-        name,
-        {String.to_float(lat), String.to_float(lon)},
-        String.to_integer(location_type),
-        String.to_integer(wheelchair_boarding),
-        transport_type
+      ] -> %{
+        :id => String.to_integer(id),
+        :code => String.to_integer(code),
+        :name => name,
+        :coords => [
+          String.to_float(lon),
+          String.to_float(lat)
+        ],
+        :loc_type => String.to_integer(loc_type),
+        :chair_board => String.to_integer(chair_board),
+        :transport_type => transport_type
       }
     end)
   end
 end
 
-count =
-  StopParser.records
+"""
+0) Как много записей в таблице stops?
+
+  StopParser.records()
   |> Enum.count
 
-count_uniq =
-  StopParser.records
-  |> Enum.map(&Kernel.elem(&1, 1))
+  # 8557
+
+
+1) Действительно ли во всех записях столбца "id"
+  содержатся только целочисленные значения?
+
+  StopParser.records()
+  |> Enum.all?(& &1[:id] |> is_integer())
+
+  # true
+
+
+1.1) Сколько всего уникальных id?
+
+  StopParser.records()
+  |> Enum.map(& &1[:id])
   |> Enum.uniq
   |> Enum.count
 
-is_int =
-  [0, 1, 4, 5]
-  |> Enum.map(
-  fn col -> StopParser.records
-  |> Enum.map(&Kernel.elem(&1, col))
-  |> Enum.map(&Kernel.is_integer(&1))
-  |> Enum.all?
-  end)
-# [true, true, true, true]
+  # 8557
 
 
-id_miss_code =
-  StopParser.records
-  |> Enum.filter(fn row ->
-    Kernel.elem(row, 0) != Kernel.elem(row, 1)
-  end)
+2) Действительно ли во всех записях столбца "code"
+  содержатся только целочисленные значения?
 
-stop_freqs =
-  StopParser.records
-  |> Enum.map(&Kernel.elem(&1, 2))
-  |> Enum.frequencies
-  |> Enum.sort_by(fn {_, x} -> x end)
-  |> Enum.reverse
+  StopParser.records()
+  |> Enum.all?(& &1[:code] |> is_integer())
 
-stop_names_uniq  =
-  StopParser.records
-  |> Enum.map(
-    &Kernel.elem(&1, 2)
-    |> String.upcase
-    |> String.replace(" ", "")
-    |> String.replace("\"", "")
-    |> String.replace(",", "")
-    |> String.replace(".", "")
-  ) |> Enum.uniq |> Enum.count
+  # true
+
+2.1) Сколько всего уникальных code?
+
+  StopParser.records()
+  |> Enum.map(& &1[:code])
+  |> Enum.uniq
+  |> Enum.count
+
+  # 8557
+
+2.1) Есть ли такие записи, что id != code?
+
+  StopParser.records()
+  |> Enum.map(& &1[:id] != &1[:code])
+  |> Enum.any?
+
+  # true
+
+2.2) В каких записях id != code?
+
+  StopParser.records()
+  |> Enum.filter(& &1[:id] != &1[:code])
+
+  . . .
+
+  # {
+  #   "type": "FeatureCollection",
+  #   "features": [
+  #   {
+  #     "type": "Feature",
+  #     "geometry": {
+  #         "type": "MultiPoint",
+  #         "coordinates": []
+  #       },
+  #     "properties": {}
+  #   }]
+  # }
 
 
-to_geojson =
-  StopParser.records
-  |> Enum.map(&Kernel.elem(&1, 3) |> Tuple.to_list)
+3) Сколько уникальных "name"?
 
-"{'type': 'FeatureCollection', 'features': [ { 'type': 'Feature', 'properties': { 'name': 'Point' }, 'geometry': { 'type': 'Point', 'coordinates': #{inspect(StopParser.records  |> Enum.map(&Kernel.elem(&1, 3) |> Tuple.to_list))}}}]}"
+  StopParser.records()
+  |> Enum.map(& &1[:name])
+  |> Enum.uniq
+  |> Enum.count
+
+  # 4288
+
+
+3.1) Изменится ли количество уникальных значений
+  в столбце "name" если сделать replace & upcase?
+
+  StopParser.records()
+  |> Enum.map(& &1[:name] |> String.replace([" ", "\"", ".", ","], "") |> String.upcase)
+  |> Enum.uniq
+  |> Enum.count
+
+  # 3546
+
+4) Сколько уникальных координат?
+
+  StopParser.records()
+  |> Enum.map(& &1[:coords])
+  |> Enum.uniq
+  |> Enum.count
+
+  # 8542
+
+4.1) Сколько повторяющихся координат?
+
+  StopParser.records()
+  |> Enum.frequencies_by(& &1[:coords])
+  |> Enum.filter(fn {_, x} -> x > 1 end)
+
+  # . . .
+
+
+4.2) Посмотреть на карте повторяющиеся координаты
+
+  StopParser.records()
+  |> Enum.frequencies_by(& &1[:coords])
+  |> Enum.filter(fn {_, x} -> x > 1 end)
+  |> Enum.map(&elem(&1, 0)) |> inspect()
+
+  # {
+  #   "type": "FeatureCollection",
+  #   "features": [
+  #   {
+  #     "type": "Feature",
+  #     "geometry": {
+  #         "type": "MultiPoint",
+  #         "coordinates":  []
+  #       },
+  #     "properties": {}
+  #   }]
+  # }
+
+
+4.2) Посмотреть все координаты
+
+  coords = StopParser.records()
+  |> Enum.map(& &1[:coords])
+  |> inspect(limit: :infinity)
+
+  File.write("coords.txt", coords)
+
+
+5) Действительно ли во всех записях столбца "location_type"
+  содержатся только целочисленные значения?
+
+    StopParser.records()
+    |> Enum.all?(& &1[:loc_type] |> is_integer())
+
+  # true
+
+
+5.1) Что такое location_type и какие значения принимает?
+
+  StopParser.records()
+  |> Enum.frequencies_by(& &1[:loc_type])
+
+  # %{0 => 8557}
+  # наземная остановка ?
+
+
+6) Действительно ли во всех записях столбца "wheelchair_boarding"
+  содержатся только целочисленные значения?
+
+  StopParser.records()
+  |> Enum.all?(& &1[:chair_board] |> is_integer())
+
+  # true
+
+
+6.1) Что такое wheelchair_boarding и какие значения принимает?
+
+  StopParser.records()
+  |> Enum.frequencies_by(& &1[:chair_board])
+
+  # %{1 => 1, 2 => 8556}
+  # остановка для ограниченно мобильных пассажиров?
+
+
+6.2) Проверить, какая записть содержит единственный :chair_board => 1?
+
+  StopParser.records()
+  |> Enum.filter(& &1[:chair_board] == 1)
+
+  # [
+  # %{
+  #   code: 27567,
+  #   id: 27567,
+  #   name: "ШКОЛА № 478",
+  #   loc_type: 0,
+  #   chair_board: 1,
+  #   transport_type: "bus",
+  #   coords: [30.45556, 60.033546]
+  # }
+  # ]
+
+
+7) Что такое transport_type и какие значения принимает?
+
+StopParser.records()
+|> Enum.frequencies_by(& &1[:transport_type])
+
+  # %{"bus" => 6316, "tram" => 897, "trolley" => 1344}
+
+"""
