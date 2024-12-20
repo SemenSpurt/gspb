@@ -1,13 +1,10 @@
 defmodule FrequenciesParser do
-  alias FileParser
-  alias Toolkit
-
   # """
   # trip_id:      integer,
   # start_time:   time,
   # end_time:     time,
-  # headway_secs: integer,
-  # exact_times:  integer
+  # headway_secs: integer, : drop?
+  # exact_times:  integer  : drop
   # """
 
   def frequencies(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/frequencies.txt") do
@@ -42,7 +39,7 @@ defmodule FrequenciesParser do
   # 106506
 
   @doc "2) Какие значения принимает столбец start_time?"
-  def start_time_frequencies, do: frequencies() |> Toolkit.frequencies_in(:start_time)
+  def start_time_frequencies, do: frequencies() |> Enum.frequencies_by(& &1.start_time)
   # %{
   #   ~T[06:00:00] => 25282,
   #   ~T[10:00:00] => 36859,
@@ -52,7 +49,7 @@ defmodule FrequenciesParser do
 
 
   @doc "3) Какие значения принимает столбец end_time?"
-  def end_time_frequencies, do: frequencies() |> Toolkit.frequencies_in(:end_time)
+  def end_time_frequencies, do: frequencies() |> Enum.frequencies_by(& &1.end_time)
   # %{
   #   ~T[00:00:00] => 19017,
   #   ~T[10:00:00] => 25282,
@@ -61,13 +58,22 @@ defmodule FrequenciesParser do
   # }
 
 
+  @doc "3.1) Есть ли такие строки для которых start_time > end_time?"
+  def check_time_inconsistensy do
+    frequencies()
+    |> Enum.filter(& Time.compare(&1.start_time, &1.end_time) == :gt)
+    |> Enum.count()
+  end
+  # 19017
+
+
   @doc "4) Сколько уникальных значений headway_secs?"
   def count_uniq_headway_secs, do: frequencies() |> Toolkit.count_uniq_in(:headway_secs)
   # 1001
 
 
-  @doc "4) Нет ли пропущенных или лишних pt_sequence?"
-  def check_headway_secs_consistency do
+  @doc "4.1) Нет ли пропущенных или лишних headway_secs?"
+  def check_headway_secs_inconsistency do
 
     freqs =
       frequencies()
@@ -84,6 +90,11 @@ defmodule FrequenciesParser do
     |> Enum.any?()
 
   end
+  # true
 
+
+  @doc "5) Какие значения принимает столбец exact_times?"
+  def exact_time_frequencies, do: frequencies() |> Enum.frequencies_by(& &1.exact_times)
+  # %{0 => 106506}
 
 end

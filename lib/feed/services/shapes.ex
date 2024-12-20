@@ -1,8 +1,4 @@
 defmodule ShapeParser do
-
-  alias FileParser
-  alias Toolkit
-
   # """
   # shape_id:             string
   # shape_pt_lat:         float
@@ -10,7 +6,6 @@ defmodule ShapeParser do
   # shape_pt_sequence:    integer
   # shape_dist_traveled:  float
   # """
-
 
   def shapes(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt") do
     file_path
@@ -65,11 +60,11 @@ defmodule ShapeParser do
 
   @doc "3) Нет ли пропущенных или лишних pt_sequence?"
   def check_pt_sequence do
-
     freqs =
       shapes()
       |> Enum.frequencies_by(& &1.pt_sequence)
       |> Enum.sort_by(&elem(&1, 1), :desc)
+      |> Enum.map(&elem(&1, 1))
 
     len = Enum.count(freqs)
 
@@ -77,19 +72,28 @@ defmodule ShapeParser do
       Enum.slice(freqs, 0, len - 1),
       Enum.slice(freqs, -len + 1, len),
     ]
-    |> Enum.zip_with(fn [a, b] -> not a >= b end)
-    |> Enum.any?() # maybe better
-
+    |> Enum.zip_with(fn [a, b] -> b > a end)
+    |> Enum.any?()
   end
-  # 2110
+  # false
+
+
+  @doc "3.1) Получить координаты маршрута по shape_id"
+  def shape_id_coords(shape_id) do
+    shapes()
+    |> Enum.filter(fn row -> row.id == shape_id end)
+    |> Enum.map(& &1.coords)
+    |> Toolkit.geojson_string()
+    |> IO.puts
+  end
 
 
   @doc "3.1) Нет ли такого, что частоты pt_sequence не располагаются в порядке возрастания?"
-  def check_pt_sequence_order do
-    shapes()
-    |> Enum.group_by(& &1.id, & &1.pt_sequence)
-    |> Enum.map
-  end
+  # def check_pt_sequence_order do
+  #   shapes()
+  #   |> Enum.group_by(& &1.id, & &1.pt_sequence)
+  #   |> Enum.map_reduce(false, fn {x, false} -> x and false end)))
+  # end
 
 
 

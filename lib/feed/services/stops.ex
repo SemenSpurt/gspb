@@ -1,7 +1,4 @@
 defmodule StopParser do
-  alias FileParser
-  alias Toolkit
-
   # """
   #   stop_id:              integer,
   #   stop_code:            integer,
@@ -69,11 +66,6 @@ defmodule StopParser do
   # 8557
 
 
-  @doc "2.1) Есть ли записи, у которых stop_id != stop_code?"
-  def id_to_code_missmatches?, do: stops() |> Enum.any?(& &1.id != &1.code)
-  # false
-
-
   @doc "2.2) В каких записях stop_id != stop_code?"
   def id_to_code_missmatches, do: stops() |> Enum.filter(& &1.id != &1.code)
   # . . .
@@ -102,14 +94,30 @@ defmodule StopParser do
   # 8542
 
 
-  @doc "4.1) Сколько дублей [stop_lat, stop_lon]?"
-  def coords_frequencies do
-    stops()
-    |> Toolkit.frequencies_in(:coords)
+  @doc "4.1) Проверить дуюли координат [stop_lat, stop_lon]?"
+  def coords_dubles do
+    coords = stops()
+    |> Enum.frequencies_by(& &1.coords)
     |> Enum.filter(fn {_, x} -> x > 1 end)
-    |> Enum.count()
+    |> Enum.map(&elem(&1, 0))
+
+    stops()
+    |> Enum.filter(fn row -> row.coords in coords end)
+    |> Enum.group_by(& &1.coords, & &1.name)
   end
   # . . .
+
+
+  @doc "4.2) Посмотреть на карте дубли координат"
+  def duplicates_coords_geojson_string do
+    StopParser.stops()
+    |> Enum.frequencies_by(& &1[:coords])
+    |> Enum.filter(fn {_, x} -> x > 1 end)
+    |> Enum.map(&elem(&1, 0))
+    |> Toolkit.geojson_string()
+    |> IO.puts()
+  end
+  #
 
 
   @doc "5) Есть ли нецелочисленные значения в столбце location_type?"
@@ -117,19 +125,19 @@ defmodule StopParser do
   # false
 
 
+  @doc "5.1) Что такое location_type и какие значения принимает?"
+  def loc_type_frequencies, do: stops() |> Enum.frequencies_by(& &1.loc_type)
+  # %{0 => 8557}
+  # наземная остановка ?
+
+
   @doc "Есть ли нецелочисленные значения в столбце wheelchair_boarding?"
   def nonintegers_in_chair_board?, do: stops() |> Toolkit.check_nonintegers_in(:chair_board)
   # false
 
 
-  @doc "5.1) Что такое location_type и какие значения принимает?"
-  def loc_type_frequencies, do: stops() |> Toolkit.frequencies_in(:loc_type)
-  # %{0 => 8557}
-  # наземная остановка ?
-
-
   @doc "6.1) Что такое wheelchair_boarding и какие значения принимает?"
-  def chair_board_frequencies, do: stops() |> Toolkit.frequencies_in(:chair_board)
+  def chair_board_frequencies, do: stops() |> Enum.frequencies_by(& &1.chair_board)
   # %{1 => 1, 2 => 8556}
   # остановка для ограниченно мобильных пассажиров?
 
@@ -151,19 +159,7 @@ defmodule StopParser do
 
 
   @doc "7) Что такое transport_type и какие значения принимает?"
-  def transport_type_frequencies, do: stops() |> Toolkit.frequencies_in(:transport_type)
+  def transport_type_frequencies, do: stops() |> Enum.frequencies_by(& &1.transport_type)
   # %{"bus" => 6316, "tram" => 897, "trolley" => 1344}
 
-
 end
-
-
-# doc """
-#     4.2) Посмотреть на карте повторяющиеся координаты
-# """
-
-# def
-#   StopParser.records()
-#   |> Enum.frequencies_by(& &1[:coords])
-#   |> Enum.filter(fn {_, x} -> x > 1 end)
-#   |> Enum.map(&elem(&1, 0)) |> inspect()

@@ -1,13 +1,10 @@
 defmodule TripParser do
-  alias FileParser
-
-
   # """
   #   route_id:       integer
   #   service_id:     integer
   #   trip_id:        integer
   #   direction_id:   boolean
-  #   shape_id:       string
+  #   shape_id:       string : может быть это поле доджно быть в routes?
   # """
 
   def trips(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/trips.txt") do
@@ -58,7 +55,7 @@ defmodule TripParser do
 
 
   @doc "3) Какие значения принемает столбец direction_id?"
-  def direction_id_frequencies, do: trips() |> Toolkit.frequencies_in(:direction_id)
+  def direction_id_frequencies, do: trips() |> Enum.frequencies_by(& &1.direction_id)
   # %{"0" => 62221, "1" => 61936}
 
 
@@ -89,22 +86,8 @@ defmodule TripParser do
   # %{"" => 2251, "track" => 121906}
 
 
-  @doc "5.2)Получить цифровые коды из shape_id"
-  def shape_id_get_digits do
-    trips()
-    |> Enum.filter(& &1.shape_id != "")
-    |> Enum.map(
-      & &1.shape_id
-      |> String.split("-")
-      |> Enum.at(1)
-      |> String.to_integer()
-    )
-    |> Enum.uniq()
-  end
-
-
   ### Multitable questions ###
-  @doc "Сколько route_id из этой таблице есть в таблице routes?"
+  @doc "Есть ли в этой таблице route_id, которых нет в таблице routes?"
   def are_there_trips_route_ids_missed_in_routes? do
     routes =
       RouteParser.routes()
@@ -113,8 +96,43 @@ defmodule TripParser do
     trips()
     |> Enum.any?(& &1.route_id not in routes)
   end
+  # false
 
-  # def are_there_trips_shape_ids_missed_in_shapes
 
+  @doc "Есть ли такие shape_id, которых нет в таблице shapes?"
+  def are_there_trips_shape_ids_missed_in_shapes? do
+    shapes =
+      ShapeParser.shapes()
+      |> Enum.uniq_by(& &1.id)
+      |> Enum.map(& &1.id)
 
+    trips()
+    |> Enum.filter(fn row -> row.shape_id not in shapes end)
+    |> Enum.frequencies_by(& &1.shape_id)
+  end
+  # %{
+  #   "" => 2251,
+  #   "track-155230" => 25,
+  #   "track-155234" => 56,
+  #   "track-162787" => 136,
+  #   "track-168210" => 84,
+  #   "track-176513" => 161,
+  #   "track-176515" => 81,
+  #   "track-177487" => 236,
+  #   "track-178867" => 189,
+  #   "track-178869" => 190,
+  #   "track-178889" => 247,
+  #   "track-179717" => 201
+  # }
+
+  @doc "Есть ли в этой таблице service_id, которых нет в таблице calendar?"
+  def are_there_trips_service_id_missed_in_calendar? do
+    calendar_services =
+      CalendarParser.calendar()
+      |> Enum.map(& &1.service_id)
+
+    trips()
+    |> Enum.any?(& &1.service_id not in calendar_services)
+  end
+  # false
 end

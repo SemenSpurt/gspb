@@ -16,13 +16,6 @@ defmodule Toolkit do
   end
 
 
-  @doc "Count valeu frequencies in column"
-  def frequencies_in(table, column) do
-    table
-    |> Enum.frequencies_by(& &1[column])
-  end
-
-
   @doc "Get time from values greater then 24 hours"
   def time_from_seconds_after_midnight(time_str) do
     [hr, min, sec] =

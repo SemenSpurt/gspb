@@ -5,6 +5,7 @@ defmodule Feed.Application do
 
   use Application
 
+  alias Toolkit
   NimbleCSV.define(FileParser, separator: ",", escape: "\"")
 
   @impl true

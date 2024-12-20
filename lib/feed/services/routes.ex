@@ -1,18 +1,14 @@
 defmodule RouteParser do
-
-  alias FileParser
-  alias Toolkit
-
   # """
   #   route_id:           integer
-  #   agency_id:          string
+  #   agency_id:          string  :drop
   #   route_short_name:   string
   #   route_long_name:    string
-  #   route_type:         integer
+  #   route_type:         integer : drop
   #   transport_type:     string
   #   circular:           boolean
   #   urban:              boolean
-  #   night:              boolean
+  #   night:              boolean : drop
   # """
 
   def routes(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/routes.txt") do
@@ -66,7 +62,7 @@ defmodule RouteParser do
 
 
   @doc "2.1) Есть ли отличные от 'orgp' значения в столбце agency_id?"
-  def values_of_agency, do: routes() |> Toolkit.frequencies_in(:agency)
+  def values_of_agency, do: routes() |> Enum.frequencies_by(& &1.agency)
   # %{"orgp" => 554}
 
 
@@ -131,12 +127,12 @@ defmodule RouteParser do
 
 
   @doc "5.1) Какие значения принимает поле route_type?"
-  def route_type_frequencies, do: routes() |> Toolkit.frequencies_in(:route_type)
+  def route_type_frequencies, do: routes() |> Enum.frequencies_by(& &1.route_type)
   # %{0 => 43, 3 => 511}
 
 
   @doc "6) Какие значения принимает поле transport_type?"
-  def transport_type_frequencies, do: routes() |> Toolkit.frequencies_in(:transport_type)
+  def transport_type_frequencies, do: routes() |> Enum.frequencies_by(& &1.transport_type)
   # %{"bus" => 464, "tram" => 43, "trolley" => 47}
 
 
@@ -150,7 +146,7 @@ defmodule RouteParser do
 
 
   @doc "7) Какие значения принимает поле circular?"
-  def circular_frequencies, do: routes() |> Toolkit.frequencies_in(:circular)
+  def circular_frequencies, do: routes() |> Enum.frequencies_by(& &1.circular)
   # %{"0" => 524, "1" => 30}
 
 
@@ -162,18 +158,32 @@ defmodule RouteParser do
   @doc "7.2 Какие transport_type имеют circular == 1?"
   def circular_transport_types do
     circular_routes()
-    |> Enum.frequencies_by(& &1[:transport_type])
+    |> Enum.frequencies_by(& &1.transport_type)
   end
   # %{"bus" => 30}
 
 
   @doc "8) Какие значения принимает столбец urban?"
-  def urban_frequencies, do: routes() |> Toolkit.frequencies_in(:urban)
+  def urban_frequencies, do: routes() |> Enum.frequencies_by(& &1.urban)
   # %{"0" => 56, "1" => 498}
 
 
   @doc "9) Какие значения принимает столбец night?"
-  def night_frequencies, do: routes() |> Toolkit.frequencies_in(:night)
+  def night_frequencies, do: routes() |> Enum.frequencies_by(& &1.night)
   # %{"0" => 554}
+
+
+  @doc "10) Сколько route_id не имеют записей в таблице trips?"
+  def find_extra_routes do
+    trip_routes =
+      TripParser.trips()
+      |> Enum.uniq_by(& &1.route_id)
+      |> Enum.map(& &1.route_id)
+
+    routes()
+    |> Enum.filter(fn row -> row.id not in trip_routes end)
+    |> Enum.count()
+  end
+  # 5
 
 end
