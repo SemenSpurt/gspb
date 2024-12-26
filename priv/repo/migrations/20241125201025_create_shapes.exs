@@ -3,11 +3,10 @@ defmodule Feed.Repo.Migrations.CreateShapes do
 
   def change do
     create table(:shapes) do
-      add :shape_id, :string
-      add :shape_pt_lat, :float
-      add :shape_pt_lon, :float
-      add :shape_pt_sequence, :integer
-      add :shape_dist_traveled, :float
+      add :shape_id, :string, primary_key: true
+      add :coords,        {:array, :float}
+      add :pt_sequence,   :integer
+      add :dist_traveled, :float
 
       timestamps(type: :utc_datetime)
     end

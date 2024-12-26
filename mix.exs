@@ -31,7 +31,9 @@ defmodule Feed.MixProject do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [ {:calendar, "~> 1.0.0"},
+    [
+      {:math, "~> 0.6.0"},
+      {:calendar, "~> 1.0.0"},
       {:dataloader, "~> 1.0.0"},
       {:csv, "~> 3.2"},
       # {:absinthe, "~> 1.6"},

@@ -1,7 +1,7 @@
 defmodule StopParser do
   # """
   #   stop_id:              integer,
-  #   stop_code:            integer,
+  #   stop_code:            integer, # drop
   #   stop_name:            string,
   #   stop_lat:             float,
   #   stop_lon:             float,
@@ -10,32 +10,33 @@ defmodule StopParser do
   #   transport_type:       string
   # """
 
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/stops.txt"
 
-  def stops(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/stops.txt") do
+  def stops(file_path \\ @file_path) do
     file_path
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Enum.map(
       fn [
         id,
-        code,
+        _, # code
         name,
         lat,
         lon,
-        loc_type,
-        chair_board,
-        transport_type
+        _, # loc_type
+        _, # chair_board
+        transport
       ] -> %{
         id: String.to_integer(id),
-        code: String.to_integer(code),
-        name: name,
+        # code: String.to_integer(code),
+        name: String.trim(name),
         coords: [
           String.to_float(lon),
           String.to_float(lat)
         ],
-        loc_type: String.to_integer(loc_type),
-        chair_board: String.to_integer(chair_board),
-        transport_type: transport_type
+        # loc_type: String.to_integer(loc_type),
+        # chair_board: String.to_integer(chair_board),
+        transport: String.trim(transport)
       }
     end)
   end
@@ -46,19 +47,9 @@ defmodule StopParser do
   # 8557
 
 
-  @doc "1) Есть ли нецелочисленные значения в столбце stop_id?"
-  def nonintegers_in_id?, do: stops() |> Toolkit.check_nonintegers_in(:id)
-  # false
-
-
   @doc "1.1) Сколько всего уникальных stop_id?"
   def count_uniq_id, do: stops() |> Toolkit.count_uniq_in(:id)
   # 8557
-
-
-  @doc "2) Есть ли нецелочисленные значения в столбце stop_code?"
-  def nonintegers_in_code?, do: stops() |> Toolkit.check_nonintegers_in(:code)
-  # false
 
 
   @doc "2.1) Сколько всего уникальных stop_code?"
@@ -68,7 +59,45 @@ defmodule StopParser do
 
   @doc "2.2) В каких записях stop_id != stop_code?"
   def id_to_code_missmatches, do: stops() |> Enum.filter(& &1.id != &1.code)
-  # . . .
+  # [
+  #   %{
+  #     code: 41870,
+  #     id: 41884,
+  #     name: "МАЛЫЙ ПР. В.О.",
+  #     coords: [30.23253, 59.93826],
+  #     loc_type: 0,
+  #     chair_board: 2,
+  #     transport_type: "bus"
+  #   },
+  #   %{
+  #     code: 41871,
+  #     id: 41885,
+  #     name: "УЛ. ТКАЧЕЙ",
+  #     coords: [30.427847, 59.893068],
+  #     loc_type: 0,
+  #     chair_board: 2,
+  #     transport_type: "bus"
+  #   },
+  #   %{
+  #     code: 41869,
+  #     id: 41883,
+  #     name: "МАЛЫЙ ПР. В.О.",
+  #     coords: [30.22499, 59.94078],
+  #     loc_type: 0,
+  #     chair_board: 2,
+  #     transport_type: "bus"
+  #   }
+  # ]
+
+
+  @doc "Посмотреть эти записи на карте"
+  def geojson_id_to_code_missmatches do
+    stops()
+    |> Enum.filter(& &1.id != &1.code)
+    |> Enum.map(& &1.coords)
+    |> Toolkit.geojson_string()
+    |> IO.puts()
+  end
 
 
   @doc "3) Сколько уникальных stop_name?"
@@ -81,12 +110,22 @@ defmodule StopParser do
     stops()
     |> Enum.uniq_by(
       & &1.name
-      |> String.replace([" ", "\"", ".", ","], "")
       |> String.upcase
+      |> String.replace(["ПЕРЕУЛОК ", "ПЕР ", "ПЕР. ", "ПЕР., "], "ПЕР. ")
+      |> String.replace(["УЛИЦА ", "УЛ ", "УЛ. ", "УЛ., "], "УЛ. ")
+      |> String.replace(["\"", ".", ","], "")
     )
     |> Enum.count
   end
-  # 3546
+  # 3590
+
+  def parse_stop_name(name) do
+    name
+    |> String.upcase
+    |> String.replace(["ПЕРЕУЛОК ", "ПЕР ", "ПЕР. ", "ПЕР., "], "ПЕР. ")
+    |> String.replace(["УЛИЦА ", "УЛ ", "УЛ. ", "УЛ., "], "УЛ. ")
+    |> String.replace(["\""], "")
+  end
 
 
   @doc "4) Сколько уникальных [stop_lat, stop_lon]?"
@@ -96,12 +135,16 @@ defmodule StopParser do
 
   @doc "4.1) Проверить дуюли координат [stop_lat, stop_lon]?"
   def coords_dubles do
-    coords = stops()
-    |> Enum.frequencies_by(& &1.coords)
-    |> Enum.filter(fn {_, x} -> x > 1 end)
-    |> Enum.map(&elem(&1, 0))
+    all_stops =
+      stops()
 
-    stops()
+    coords =
+      all_stops
+      |> Enum.frequencies_by(& &1.coords)
+      |> Enum.filter(fn {_, x} -> x > 1 end)
+      |> Enum.map(&elem(&1, 0))
+
+    all_stops
     |> Enum.filter(fn row -> row.coords in coords end)
     |> Enum.group_by(& &1.coords, & &1.name)
   end
@@ -109,9 +152,9 @@ defmodule StopParser do
 
 
   @doc "4.2) Посмотреть на карте дубли координат"
-  def duplicates_coords_geojson_string do
-    StopParser.stops()
-    |> Enum.frequencies_by(& &1[:coords])
+  def geojson_duplicates_coords do
+    stops()
+    |> Enum.frequencies_by(& &1.coords)
     |> Enum.filter(fn {_, x} -> x > 1 end)
     |> Enum.map(&elem(&1, 0))
     |> Toolkit.geojson_string()
@@ -120,20 +163,10 @@ defmodule StopParser do
   #
 
 
-  @doc "5) Есть ли нецелочисленные значения в столбце location_type?"
-  def nonintegers_in_loc_type?, do: stops() |> Toolkit.check_nonintegers_in(:loc_type)
-  # false
-
-
   @doc "5.1) Что такое location_type и какие значения принимает?"
   def loc_type_frequencies, do: stops() |> Enum.frequencies_by(& &1.loc_type)
   # %{0 => 8557}
   # наземная остановка ?
-
-
-  @doc "Есть ли нецелочисленные значения в столбце wheelchair_boarding?"
-  def nonintegers_in_chair_board?, do: stops() |> Toolkit.check_nonintegers_in(:chair_board)
-  # false
 
 
   @doc "6.1) Что такое wheelchair_boarding и какие значения принимает?"
@@ -159,7 +192,19 @@ defmodule StopParser do
 
 
   @doc "7) Что такое transport_type и какие значения принимает?"
-  def transport_type_frequencies, do: stops() |> Enum.frequencies_by(& &1.transport_type)
+  def transport_frequencies, do: stops() |> Enum.frequencies_by(& &1.transport)
   # %{"bus" => 6316, "tram" => 897, "trolley" => 1344}
+
+
+
+  @doc "Есть ли такие stop_id, которых нет в stop_times?"
+  def stop_id_to_stop_times_stop_id do
+    stops()
+    |> MapSet.new(& &1.id)
+    |> MapSet.difference(
+      StopTimesParser.stop_times()
+      |> MapSet.new(& &1.stop_id)
+      )
+  end
 
 end

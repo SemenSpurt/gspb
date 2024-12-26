@@ -1,20 +1,29 @@
 defmodule Feed.Utils.LoadDb do
 
-  # alias Feed.Route.{
-  #   Routes,
-  #   Trips
-  # }
-  # alias Feed.Place.{
-  #   Stops,
-  #   Shapes
-  # }
+  alias Feed.Services.Import.{
+    Routes,
+    Trips,
+    Stops,
+    Freqs,
+    Shapes,
+    Calendar,
+    StopTimes,
+    CalendarDates
+  }
 
-  # alias Feed.Time.{
-  #   Dates,
-  #   Freqs,
-  #   Week,
-  #   Times
-  # }
+  def load_db do
+    [
+      Routes,
+      Trips,
+      Stops,
+      Freqs,
+      Shapes,
+      Calendar,
+      StopTimes,
+      CalendarDates
+    ]
+    |> Enum.map(& &1.import_records())
+  end
 
 
 

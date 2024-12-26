@@ -13,7 +13,9 @@ defmodule CalendarParser do
   # service_name: string
   # """
 
-  def calendar(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/calendar.txt") do
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/calendar.txt"
+
+  def calendar(file_path \\ @file_path) do
     file_path
     |> File.stream!()
     |> FileParser.parse_stream()
@@ -41,7 +43,7 @@ defmodule CalendarParser do
         sunday:       String.to_integer(sunday),
         start_date:   Toolkit.date_from_reverse_string(end_date),
         end_date:     Toolkit.date_from_reverse_string(start_date),
-        service_name: service_name
+        service_name: String.trim(service_name)
       }
     end)
   end
@@ -116,24 +118,22 @@ defmodule CalendarParser do
 
   @doc "9.1) Какие min(start_date) and max(end_date)?"
   def date_outer_range do
-    min_date =
+    dates =
       calendar()
-      |> Enum.map(& &1.start_date)
-      |> Enum.min()
+      |> Enum.map(& [&1.start_date, &1.end_date])
+      |> List.flatten()
+      |> Enum.sort(Date)
 
-    max_date =
-      calendar()
-      |> Enum.map(& &1.end_date)
-      |> Enum.max()
-
-    [min_date, max_date]
+    [
+      Enum.at(dates, 0),
+      Enum.at(dates, -1)
+    ]
   end
-  # [~D[2019-12-30], ~D[2024-10-31]]
+  # [~D[2019-12-30], ~D[2024-11-23]]
 
 
   @doc "10) Получить service_id's для даты"
   def service_id_by_date(date) do
-
     date =
       date
       |> Date.from_iso8601!()

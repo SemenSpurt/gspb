@@ -1,23 +1,19 @@
-defmodule Feed.Time.Dates do
+defmodule Feed.Ecto.CalendarDates do
   import Ecto.Query, warn: false
 
   alias Feed.{
     Repo,
-    Route.Trips.Trip
+    Ecto.Trips.Trip
   }
 
-  alias Date, as: Datedate
-
-
   defmodule Date do
-
     use Ecto.Schema
     import Ecto.Changeset
 
-    schema "dates" do
-      field :service_id,     :integer
-      field :date,           :date
-      field :exception_type, :integer
+    schema "calendar_dates" do
+      field :service_id, :integer
+      field :date,      :date
+      field :exception, :integer
 
       has_many :trips, Trip,
         foreign_key: :service_id,
@@ -32,12 +28,12 @@ defmodule Feed.Time.Dates do
       |> cast(attrs, [
         :service_id,
         :date,
-        :exception_type
+        :exception
       ])
       |> validate_required([
         :service_id,
         :date,
-        :exception_type
+        :exception
       ])
     end
   end
@@ -75,33 +71,7 @@ defmodule Feed.Time.Dates do
   end
 
 
-  def import(records \\ %{}) do
-
-    Date
-    |> Repo.insert_all(
-      Enum.map(records, fn [
-        service_id,
-        date,
-        exception_type
-      ] ->
-      %{
-
-        :date            => Datedate.from_iso8601!(
-          Enum.at(
-            (for <<
-            y::binary-size(4),
-            m::binary-size(2),
-            d::binary-size(2) <- date
-            >>, do: "#{y}-#{m}-#{d}"), 0
-          )
-        ),
-
-        :exception_type  => String.to_integer(exception_type),
-        :service_id      => String.to_integer(service_id),
-
-        :inserted_at     => DateTime.utc_now(:second),
-        :updated_at      => DateTime.utc_now(:second)
-      }
-      end))
+  def import_records(records \\ %{}) do
+    Repo.insert_all(Date, records)
   end
 end

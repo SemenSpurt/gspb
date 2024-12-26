@@ -1,22 +1,21 @@
-defmodule Feed.Time.Times do
+defmodule Feed.Ecto.StopTimes do
   import Ecto.Query, warn: false
 
   alias Feed.{
     Repo,
-    Place.Stops.Stop,
-    Place.Shapes.Shape,
+    Ecto.Stops.Stop,
+    Ecto.Shapes.Shape,
   }
 
-  alias Time, as: Tm
 
   defmodule Time do
     use Ecto.Schema
     import Ecto.Changeset
 
-    schema "times" do
+    schema "stop_times" do
       belongs_to :stop, Stop,
         foreign_key: :stop_id,
-        references: :stop_id
+        references: :id
 
       field :trip_id, :integer
       field :arrival_time, :time
@@ -88,40 +87,7 @@ defmodule Feed.Time.Times do
   end
 
 
-  defp parse_time(time_str) do
-    [hr, min, sec] =
-      time_str
-      |> String.split(":")
-      |> Enum.map(&String.to_integer/1)
-
-    hr * 3600 + min * 60 + sec
-  end
-
-  def import(records \\ %{}) do
-    Time
-    |> Repo.insert_all(
-      Enum.map(records, fn [
-        trip_id,
-        arrival_time,
-        departure_time,
-        stop_id,
-        stop_sequence,
-        shape_id,
-        shape_dist_traveled
-      ] ->
-      %{
-        :trip_id             => String.to_integer(trip_id),
-        :arrival_time        => Tm.from_seconds_after_midnight(parse_time(arrival_time)),
-        :departure_time      => Tm.from_seconds_after_midnight(parse_time(departure_time)),
-        :stop_id             => String.to_integer(stop_id),
-        :stop_sequence       => String.to_integer(stop_sequence),
-        :shape_id            => shape_id,
-        :shape_dist_traveled => String.to_float(shape_dist_traveled),
-
-        :inserted_at         => DateTime.utc_now(:second),
-        :updated_at          => DateTime.utc_now(:second)
-      }
-      end)
-    )
+  def import_records(records \\ %{}) do
+    Repo.insert_all(Time, records)
   end
 end

@@ -3,15 +3,11 @@ defmodule Feed.Repo.Migrations.CreateRoutes do
 
   def change do
     create table(:routes) do
-      add :route_id, :integer
-      add :agency_id, :string
-      add :route_short_name, :string
-      add :route_long_name, :string
-      add :route_type, :integer
-      add :transport_type, :string
-      add :circular, :boolean, default: false, null: false
-      add :urban, :boolean, default: false, null: false
-      add :night, :boolean, default: false, null: false
+      add :short_name, :string
+      add :long_name, :string
+      add :transport, :string
+      add :circular, :boolean
+      add :urban, :boolean
 
       timestamps(type: :utc_datetime)
     end

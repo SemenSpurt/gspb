@@ -1,9 +1,9 @@
-defmodule Feed.Time.Freqs do
+defmodule Feed.Ecto.Freqs do
   import Ecto.Query, warn: false
 
   alias Feed.{
     Repo,
-    Route.Trips.Trip
+    Ecto.Trips.Trip
   }
 
 
@@ -19,7 +19,6 @@ defmodule Feed.Time.Freqs do
       field :start_time, :time
       field :end_time, :time
       field :headway_secs, :integer
-      field :exact_times, :boolean
 
       timestamps(type: :utc_datetime)
     end
@@ -30,15 +29,13 @@ defmodule Feed.Time.Freqs do
         :trip_id,
         :start_time,
         :end_time,
-        :headway_secs,
-        :exact_times
+        :headway_secs
       ])
       |> validate_required([
         :trip_id,
         :start_time,
         :end_time,
-        :headway_secs,
-        :exact_times
+        :headway_secs
       ])
     end
 end
@@ -75,28 +72,7 @@ end
   end
 
 
-  def import(records \\ %{}) do
-
-    Freq
-    |> Repo.insert_all(
-      Enum.map(records, fn [
-        trip_id,
-        start_time,
-        end_time,
-        headway_secs,
-        exact_times
-      ] ->
-      %{
-        :trip_id      => String.to_integer(trip_id),
-        :end_time     => Time.from_iso8601!(start_time),
-        :start_time   => Time.from_iso8601!(end_time),
-        :headway_secs => String.to_integer(headway_secs),
-        :exact_times  => exact_times == "1",
-
-        :inserted_at  => DateTime.utc_now(:second),
-        :updated_at   => DateTime.utc_now(:second)
-      }
-      end)
-    )
+  def import_records(records \\ %{}) do
+    Repo.insert_all(Freq, records)
   end
 end

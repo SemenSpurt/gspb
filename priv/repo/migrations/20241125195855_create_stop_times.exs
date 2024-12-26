@@ -1,8 +1,8 @@
-defmodule Feed.Repo.Migrations.CreateTimes do
+defmodule Feed.Repo.Migrations.CreateStopTimes do
   use Ecto.Migration
 
   def change do
-    create table(:times) do
+    create table(:stop_times) do
       add :trip_id, :integer
       add :arrival_time, :time
       add :departure_time, :time

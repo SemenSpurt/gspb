@@ -3,11 +3,13 @@ defmodule FrequenciesParser do
   # trip_id:      integer,
   # start_time:   time,
   # end_time:     time,
-  # headway_secs: integer, : drop?
+  # headway_secs: integer,
   # exact_times:  integer  : drop
   # """
 
-  def frequencies(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/frequencies.txt") do
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/frequencies.txt"
+
+  def frequencies(file_path \\ @file_path) do
     file_path
     |> File.stream!()
     |> FileParser.parse_stream()
@@ -17,13 +19,13 @@ defmodule FrequenciesParser do
         start_time,
         end_time,
         headway_secs,
-        exact_times
+        _
       ] -> %{
         trip_id:      String.to_integer(trip_id),
         start_time:   Toolkit.time_from_seconds_after_midnight(start_time),
         end_time:     Toolkit.time_from_seconds_after_midnight(end_time),
         headway_secs: String.to_integer(headway_secs),
-        exact_times:  String.to_integer(exact_times)
+        # exact_times:  String.to_integer(exact_times)
       }
     end)
   end
@@ -37,6 +39,7 @@ defmodule FrequenciesParser do
   @doc "1) Сколько уникальных значений trip_id?"
   def count_uniq_trip_id, do: frequencies() |> Toolkit.count_uniq_in(:trip_id)
   # 106506
+
 
   @doc "2) Какие значения принимает столбец start_time?"
   def start_time_frequencies, do: frequencies() |> Enum.frequencies_by(& &1.start_time)
@@ -72,29 +75,21 @@ defmodule FrequenciesParser do
   # 1001
 
 
-  @doc "4.1) Нет ли пропущенных или лишних headway_secs?"
-  def check_headway_secs_inconsistency do
-
-    freqs =
-      frequencies()
-      |> Enum.frequencies_by(& &1.headway_secs)
-      |> Enum.sort_by(&elem(&1, 1), :desc)
-
-    len = Enum.count(freqs)
-
-    [
-      Enum.slice(freqs, 0, len - 1),
-      Enum.slice(freqs, -len + 1, len),
-    ]
-    |> Enum.zip_with(fn [a, b] -> not (a >= b) end)
-    |> Enum.any?()
-
-  end
-  # true
-
-
   @doc "5) Какие значения принимает столбец exact_times?"
   def exact_time_frequencies, do: frequencies() |> Enum.frequencies_by(& &1.exact_times)
   # %{0 => 106506}
+
+
+  @doc "6) Есть ли в таблице такие рейсы, которых нет в таблице trips?"
+  def extra_records? do
+    trips =
+      TripParser.trips()
+      |> MapSet.new(& &1.trip_id)
+
+    frequencies()
+    |> MapSet.new(& &1.trip_id)
+    |> MapSet.difference(trips)
+  end
+  # MapSet.new([])
 
 end

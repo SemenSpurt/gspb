@@ -9,13 +9,6 @@ defmodule Toolkit do
   end
 
 
-  @doc "Check for noninteger values in column"
-  def check_nonintegers_in(table, column) do
-    table
-    |> Enum.any?(& not is_integer(&1[column]))
-  end
-
-
   @doc "Get time from values greater then 24 hours"
   def time_from_seconds_after_midnight(time_str) do
     [hr, min, sec] =
@@ -37,7 +30,6 @@ defmodule Toolkit do
       >>, do: "#{y}-#{m}-#{d}"), 0
     )
     |> Date.from_iso8601!()
-
   end
 
 

@@ -7,7 +7,9 @@ defmodule ShapeParser do
   # shape_dist_traveled:  float
   # """
 
-  def shapes(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt") do
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt"
+
+  def shapes(file_path \\ @file_path) do
     file_path
     |> File.stream!()
     |> FileParser.parse_stream()
@@ -19,7 +21,7 @@ defmodule ShapeParser do
         pt_sequence,
         dist_traveled
       ] -> %{
-        id: id,
+        id: String.trim(id),
         coords: [
           String.to_float(pt_lon),
           String.to_float(pt_lat)
@@ -39,6 +41,14 @@ defmodule ShapeParser do
   @doc "1) Сколько всего уникальных shape_id?"
   def count_uniq_id, do: shapes() |> Toolkit.count_uniq_in(:id)
   # 28403
+
+
+  @doc "1) Сколько всего уникальных shape_id + stop_id + pt_sequence?"
+  def count_uniq_records do
+    shapes()
+    |> Enum.uniq_by(& [&1.id, &1.coords, &1.dist_traveled])
+  end
+  # 786992
 
 
   @doc "1.1) Какие различные префиксы вcтречаются среди значений shape_id?"
@@ -88,14 +98,11 @@ defmodule ShapeParser do
   end
 
 
-  @doc "3.1) Нет ли такого, что частоты pt_sequence не располагаются в порядке возрастания?"
+  # @doc "3.1) Нет ли такого, что частоты pt_sequence не располагаются в порядке возрастания?"
   # def check_pt_sequence_order do
   #   shapes()
   #   |> Enum.group_by(& &1.id, & &1.pt_sequence)
-  #   |> Enum.map_reduce(false, fn {x, false} -> x and false end)))
+  #   |> Enum.map_reduce(false, fn {x, false} -> x and false end)
   # end
-
-
-
 
 end

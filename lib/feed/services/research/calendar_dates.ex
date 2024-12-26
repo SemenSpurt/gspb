@@ -2,22 +2,24 @@ defmodule CalendarDatesParser do
   # """
   # service_id:     integer,
   # date:           date, : удалить избыточные
-  # exception_type  integer
+  # exception_type: integer
   # """
 
-  def calendar_dates(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/calendar_dates.txt") do
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/calendar_dates.txt"
+
+  def calendar_dates(file_path \\ @file_path) do
     file_path
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Enum.map(
       fn [
-        service_id,
+        id,
         date,
-        exception_type
+        type
        ] -> %{
-        service_id:     String.to_integer(service_id),
-        exception_type: String.to_integer(exception_type),
-        date:           Toolkit.date_from_reverse_string(date)
+        id:   String.to_integer(id),
+        type: String.to_integer(type),
+        date: Toolkit.date_from_reverse_string(date)
       }
     end)
   end
@@ -29,23 +31,19 @@ defmodule CalendarDatesParser do
 
 
   @doc "1) Сколько всего уникальных service_id?"
-  def count_uniq_service_id, do: calendar_dates() |> Toolkit.count_uniq_in(:service_id)
+  def count_uniq_id, do: calendar_dates() |> Toolkit.count_uniq_in(:id)
   # 866
 
 
   @doc "1.1) Сколько из них встречается в таблице trips?"
-  def calendar_dates_setvice_id_to_trips_service_id do
-
+  def calendar_dates_service_id_to_trips_service_id do
     trips_services =
       TripParser.trips()
-      |> Enum.map(& &1.service_id)
-      |> Enum.uniq()
+      |> MapSet.new(& &1.service_id)
 
     calendar_dates()
-    |> Enum.map(& &1.service_id)
-    |> Enum.uniq()
-    |> Enum.filter(fn x -> x in trips_services end)
-    |> Enum.count
+      |> MapSet.new(& &1.id)
+      |> MapSet.intersection(trips_services)
   end
   # 866
 
@@ -54,13 +52,13 @@ defmodule CalendarDatesParser do
   def service_id_frequencies do
     freqs =
       calendar_dates()
-        |> Enum.frequencies_by(& &1.service_id)
-        |> Enum.sort_by(&elem(&1, 1),:desc)
+        |> Enum.frequencies_by(& &1.id)
+        |> Enum.sort_by(&elem(&1, 1), :desc)
 
-    {
+    [
       Enum.slice(freqs, 0, 5),
       Enum.slice(freqs, -5, 5)
-    }
+    ]
   end
   # {
   #  [{137710, 363}, {138309, 363}, {137823, 363}, {137446, 363}, {136833, 363}],
@@ -69,17 +67,25 @@ defmodule CalendarDatesParser do
 
 
   @doc "2) Какие значения принимает столбец exception_type?"
-  def exception_type_frequencies, do: calendar_dates() |> Enum.frequencies_by(& &1.exception_type)
+  def exception_type_frequencies do
+    calendar_dates()
+    |> Enum.frequencies_by(& &1.type)
+  end
   # %{1 => 132299, 2 => 137080}
 
 
   @doc "3) Какие минимальная и максимальная даты?"
   def min_and_max_date_records do
+    now = DateTime.utc_now()
     dates =
       calendar_dates()
       |> Enum.sort_by(& &1.date)
 
-    {Enum.at(dates, 0), Enum.at(dates, -1)}
+    [
+      Enum.at(dates, 0),
+      Enum.at(dates, -1)
+    ]
+    DateTime.diff(DateTime.utc_now(), now, :millisecond)
   end
   # {
   #   %{date: ~D[2011-01-01], service_id: 137829, exception_type: 2},
@@ -92,6 +98,7 @@ defmodule CalendarDatesParser do
     вне интервала [start_date, end_date] из calendar?
   """
   def check_services_by_date(records, date) do
+
     records
     |> Enum.filter(
       fn row ->
@@ -102,12 +109,37 @@ defmodule CalendarDatesParser do
     |> Enum.map(& &1.service_id)
 
   end
+  # def filter_false_dates do
+  #   now = DateTime.utc_now()
+
+  #   calendar =
+  #     CalendarParser.calendar()
+
+  #   calendar_dates()
+  #   |> Enum.zip_with()
+  #   |> Enum.filter(fn x -> x.id in check_services_by_date(calendar, x.date) end)
+  #   |> Enum.count()
+
+  #   DateTime.diff(DateTime.utc_now(), now, :millisecond)
+  # end
+  # 131387
+
+
   def filter_false_dates do
-    calendar = CalendarParser.calendar()
+
+
+    [min, max] =
+      CalendarParser.date_outer_range()
 
     calendar_dates()
-    |> Enum.filter(fn x -> x.service_id in check_services_by_date(calendar, x.date) end)
-    |> Enum.count()
+    |> Enum.filter(
+      fn x ->
+        Date.compare(x.date, min) == :gt and
+        Date.compare(x.date, max) == :lt
+      end
+    )
+    |> Enum.group_by(& &1.id, & &1.date)
+    |> Enum.map(fn {k, v} -> {k, Enum.sort(v, Date)} end)
+
   end
-  # 131387
 end

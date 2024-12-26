@@ -1,4 +1,4 @@
-defmodule Feed.Route.Trips do
+defmodule Feed.Ecto.Trips do
   import Ecto.Query, warn: false
 
   alias Date, as: Dt
@@ -6,13 +6,14 @@ defmodule Feed.Route.Trips do
 
   alias Feed.{
     Repo,
-    Time.Week.Days,
-    Time.Times.Time,
-    Time.Dates.Date,
-    Time.Freqs.Freq,
-    Place.Shapes.Shape,
-    Route.Routes.Route
+    Ecto.Calendar.Calendar,
+    Ecto.StopTimes.Time,
+    Ecto.CalendarDates.Date,
+    Ecto.Freqs.Freq,
+    Ecto.Shapes.Shape,
+    Ecto.Routes.Route
   }
+
 
   defmodule Trip do
     use Ecto.Schema
@@ -21,24 +22,23 @@ defmodule Feed.Route.Trips do
     schema "trips" do
       belongs_to :route, Route,
         foreign_key: :route_id,
-        references: :route_id
+        references: :id
 
-      belongs_to :days, Days,
+      belongs_to :calendar, Calendar,
         foreign_key: :service_id,
-        references: :service_id
+        references: :id
 
-      field :trip_id, :integer
       field :direction_id, :boolean, default: false
       field :shape_id, :string
 
       has_many :freqs, Freq,
         foreign_key: :trip_id,
-        references: :trip_id,
+        references: :id,
         preload_order: [asc: :start_time]
 
       has_many :times, Time,
         foreign_key: :trip_id,
-        references: :trip_id,
+        references: :id,
         preload_order: [asc: :stop_sequence]
 
       has_many :shapes, Shape,
@@ -70,13 +70,13 @@ defmodule Feed.Route.Trips do
   end
 
 
-
   def list_trips do
     Repo.all(Trip)
   end
 
 
   def get_trip!(id), do: Repo.get!(Trip, id)
+
 
   def trip_stops(trip_id) do
     query =
@@ -87,8 +87,8 @@ defmodule Feed.Route.Trips do
     Feed.Repo.all(query)
   end
 
-  def route_trips(route_id, date) do
 
+  def route_trips(route_id, date) do
   weekday =
       date
       |> Dt.from_iso8601!
@@ -97,7 +97,7 @@ defmodule Feed.Route.Trips do
       |> String.to_atom
 
   schedule =
-    from service in Days,
+    from service in Calendar,
       where: field(service, ^weekday) == true,
       where: service.end_date >= ^date,
       where: service.start_date <= ^date,
@@ -143,28 +143,8 @@ defmodule Feed.Route.Trips do
     Trip.changeset(trip, attrs)
   end
 
-  def import(records \\ %{}) do
 
-    Trip
-    |> Repo.insert_all(
-      Enum.map(records, fn [
-        route_id,
-        service_id,
-        trip_id,
-        direction_id,
-        shape_id
-      ] ->
-      %{
-        :route_id     => String.to_integer(route_id),
-        :service_id   => String.to_integer(service_id),
-        :trip_id      => String.to_integer(trip_id),
-        :direction_id => direction_id == "1",
-        :shape_id     => shape_id,
-
-        :inserted_at  => DateTime.utc_now(:second),
-        :updated_at   => DateTime.utc_now(:second)
-      }
-      end)
-    )
+  def import_records(records \\ %{}) do
+    Repo.insert_all(Trip, records)
   end
 end
