@@ -6,9 +6,7 @@ defmodule Feed.Repo.Migrations.CreateTrips do
       add :route_id, :integer
       add :service_id, :integer
       add :direction_id, :boolean
-      add :shape_id, :string
-
-      timestamps(type: :utc_datetime)
+      add :track_id, :string
     end
   end
 end

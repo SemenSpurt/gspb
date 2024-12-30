@@ -7,6 +7,8 @@ defmodule TripParser do
   #   shape_id:       string : может быть это поле доджно быть в routes?
   # """
 
+  alias Feed.Utils.Toolkit
+
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/trips.txt"
 
   def trips(file_path \\ @file_path) do

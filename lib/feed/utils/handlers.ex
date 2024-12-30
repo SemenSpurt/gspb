@@ -1,294 +1,271 @@
 defmodule Feed.Utils.Handlers do
   import Ecto.Query, warn: false
-  alias Feed.Repo
+  import Geo.PostGIS
 
-  alias Time, as: Clock
+  alias Bandit
   alias Math
+
+  alias Feed.{
+    Repo,
+    Utils.Toolkit
+  }
 
   alias Feed.Ecto.{
     Trips.Trip,
     Stops.Stop,
     Routes.Route,
-    Shapes.Shape,
-    StopTimes.Time,
+    Shapes.Track,
+    StopTimes.StopTime,
+    Calendar.Week,
     Calendar.Calendar
   }
 
+  @handle1_attrs %{
+    types: [:bus, :tram],
+    search: "",
+    radius: 5750,
+    coords: {30.336146, 59.934243}
+  }
 
-  defp compute_coords_range(coords, radius) do
-    earth_radius = 6_371_210
-    uno_degree = Math.pi / 180
-
-    half_earth = uno_degree * earth_radius
-
-    coords
-    |> Enum.map(
-      fn x -> [
-          x - radius / half_earth * Math.cos(x * uno_degree),
-          x + radius / half_earth * Math.cos(x * uno_degree)
-        ]
+  @doc "Handler 1"
+  def stops_within_the_area(attrs \\ @handle1_attrs) do
+    types =
+      if attrs.types == [] do
+        Route
+        |> select([r], r.transport)
+        |> distinct([r], r.transport)
+        |> Repo.all()
+      else
+        attrs.types |> Enum.map(&Atom.to_string(&1))
       end
-    )
+
+    point = %Geo.Point{coordinates: attrs.coords}
+
+    Stop
+    |> where([s], s.transport in ^types)
+    |> where([s], ilike(s.name, ^"%#{attrs.search}%"))
+    |> where([s], st_distance_in_meters(s.coords, ^point) < ^attrs.radius)
+    |> Repo.all()
   end
 
+  @handle2_attrs %{
+    types: [],
+    search: "ул",
+    dist_gt: 150,
+    day: :tuesday
+  }
 
-  @doc"Handler 1"
-  def stops_within_the_area(
-    attrs \\ %{
-      types: [:bus, :tram],
-      search: "",
-      radius: 5_500,
-      coords: [30.336146, 59.934243]
-    }
-  ) do
+  @doc "Handler 2 ~ 50ms"
+  def routes_with_dist_gt(attrs \\ @handle2_attrs) do
+    now = Time.utc_now()
 
-    types = cond do
-      attrs.types == [] ->
-        ["bus", "tram", "trolley"]
-      attrs.types != [] ->
-        attrs.types
-        |> Enum.map(&Atom.to_string(&1))
-    end
+    types =
+      if attrs.types == [] do
+        Route
+        |> select([r], r.transport)
+        |> distinct([r], r.transport)
+        |> Repo.all()
+      else
+        attrs.types |> Enum.map(&Atom.to_string(&1))
+      end
 
-    [
-      [low_lon, high_lon],
-      [low_lat, high_lat]
-    ] =
-      compute_coords_range(attrs.coords, attrs.radius)
+    service_ids =
+      from w in Week,
+        join: c in Calendar,
+        on: c.name == w.name,
+        select: c.service_id,
+        where: field(w, ^attrs.day)
 
-    query =
-      from s in Stop,
-        where: s.transport in ^types,
-        where: ilike(s.name, ^"%#{attrs.search}%"),
-        where: fragment("?[0] BETWEEN ? AND ?", s.coords, ^low_lon, ^high_lon),
-        where: fragment("?[1] BETWEEN ? AND ?", s.coords, ^low_lat, ^high_lat)
-        # select: s.coords
+    track_ids =
+      from t in Track,
+        select: t.track_id,
+        where: st_length(t.line) > ^attrs.dist_gt / 1000
 
-    Repo.all(query)
-  end
-
-
-  @doc "Handler 2"
-  def shapes_with_dist_gt(
-    attrs \\ %{
-      types: [:bus, :tram],
-      search: "",
-      dist_gt: 1_500,
-      day: :tuesday
-    }
-  ) do
-
-    types = cond do
-      attrs.types == [] ->
-        ["bus", "tram", "trolley"]
-      attrs.types != [] ->
-        attrs.types
-        |> Enum.map(&Atom.to_string(&1))
-    end
-
-    shape =
-      from s in Shape,
-        distinct: [s.shape_id, max(s.dist_traveled)],
-        group_by: s.shape_id,
-        where: s.dist_traveled > ^(attrs.dist_gt / 1000),
-        select: s.shape_id
-
-    services =
-      from c in Calendar,
-        where: field(c, ^attrs.day) == true,
-        select: c.id
-
-    routes =
+    trip_ids =
       from t in Trip,
+        select: t.route_id,
         distinct: t.route_id,
-        where: t.service_id in subquery(services),
-        where: t.shape_id in subquery(shape),
-        select: t.route_id
+        where: t.track_id in subquery(track_ids),
+        where: t.service_id in subquery(service_ids)
 
     query =
       from r in Route,
-        where: ilike(r.long_name, ^"%#{attrs.search}%"),
-        where: r.transport in ^types,
-        where: r.id in subquery(routes)
+        where: r.id in subquery(trip_ids),
+        where: r.transport in ^types
+
+    # Style pipe
+    # query =
+    #   from r in Route,
+    #     join: t in Trip,
+    #     on: r.id == t.route_id,
+    #     join: t1 in Track,
+    #     on: t1.track_id == t.track_id,
+    #     where: r.transport in ^types,
+    #     where: st_length(t1.line) > (^attrs.dist_gt / 1000),
+    #     where: ilike(r.long_name, ^"%#{attrs.search}%")
 
     Repo.all(query)
+    Time.diff(Time.utc_now(), now, :millisecond)
   end
 
+  @handle3_attrs %{
+    stop_id: 18840,
+    day: :wednesday
+  }
 
+  @doc "Handler 3 ~ 250ms"
+  def routes_over_stop_by_weekday(attrs \\ @handle3_attrs) do
+    now = Time.utc_now()
 
-
-  @doc "Handler 3"
-  def routes_over_stop_by_weekday(
-    attrs \\ %{
-      stop_id: 26560,
-      day: :wednesday
-    }
-  ) do
-
-    trips =
-      from t in Time,
+    trip_ids =
+      from t in StopTime,
+        select: t.trip_id,
         distinct: t.trip_id,
-        where: t.stop_id == ^attrs.stop_id,
-        select: t.trip_id
+        where: t.stop_id == ^attrs.stop_id
 
-    services =
-      from c in Calendar,
-        where: field(c, ^attrs.day) == true,
-        select: c.id
+    service_ids =
+      from w in Week,
+        join: c in Calendar,
+        on: c.name == w.name,
+        select: c.service_id,
+        where: field(w, ^attrs.day)
 
-    routes =
+    route_ids =
       from t in Trip,
-        where: t.id in subquery(trips),
-        where: t.service_id in subquery(services),
-        select: t.route_id
+        select: t.route_id,
+        where: t.id in subquery(trip_ids),
+        where: t.service_id in subquery(service_ids)
 
     query =
       from r in Route,
-        where: r.id in subquery(routes)
+        where: r.id in subquery(route_ids)
 
     Repo.all(query)
+    Time.diff(Time.utc_now(), now, :millisecond)
   end
 
-  @doc "Handler 4"
-  def hourly_mean_come_interval(
-    attrs \\ %{
-      stop_id: 33757,
-      route_id: 3812,
-      day: :tuesday
-    }
-  ) do
+  @handle4_attrs %{
+    stop_id: 18826,
+    route_id: 1725,
+    day: :tuesday
+  }
 
-    services =
-      from c in Calendar,
-        where: field(c, ^attrs.day) == true,
-        select: c.id
+  @doc "Handler 4 ~ 300ms"
+  def hourly_mean_arrival_interval(attrs \\ @handle4_attrs) do
+    now = Time.utc_now()
+
+    service_ids =
+      from w in Week,
+        join: c in Calendar,
+        on: c.name == w.name,
+        select: c.service_id,
+        where: field(w, ^attrs.day)
 
     trips =
       from t in Trip,
+        select: t.id,
         where: t.route_id == ^attrs.route_id,
-        where: t.service_id in subquery(services),
-        select: t.id
+        where: t.service_id in subquery(service_ids)
 
     stop_times =
-      from t in Time,
+      from t in StopTime,
+        select: t.arrival_time,
         where: t.stop_id == ^attrs.stop_id,
-        where: t.trip_id in subquery(trips),
-        select: t.arrival_time
+        where: t.trip_id in subquery(trips)
 
     Repo.all(stop_times)
     |> Enum.group_by(& &1.hour)
-    |> Enum.map(
-      fn {k, v} ->
-         {k, Enum.sort(v, :asc)
-             |> Enum.chunk_every(2, 1, :discard)
-             |> Enum.map(fn [x, y] -> Clock.diff(y, x) / 60 end)
-         }
-      end
-    )
-    |> Enum.map(
-      fn {k, v} -> %{
+    |> Enum.map(fn {k, v} ->
+      {k,
+       Enum.sort(v, :asc)
+       |> Enum.chunk_every(2, 1, :discard)
+       |> Enum.map(fn [x, y] -> Time.diff(y, x) / 60 end)}
+    end)
+    |> Enum.map(fn {k, v} ->
+      %{
         hour: k,
-        interval: unless v == [] do
-          Enum.sum(v) / Enum.count(v) |> Float.round(1)
-        end
-        }
-      end
-    )
+        interval:
+          unless v == [] do
+            (Enum.sum(v) / Enum.count(v)) |> Float.round(1)
+          end
+      }
+    end)
+
+    Time.diff(Time.utc_now(), now, :millisecond)
   end
 
-  @doc "Handler 5"
-  def routes_between_two_stops(
-    attrs \\ %{
-      stop_id1: 35932,
-      stop_id2: 1905,
-      day: :tuesday
-    }
-  ) do
+  @handle5_attrs %{
+    stop_id1: 22127,
+    stop_id2: 3104,
+    day: :tuesday
+  }
 
+  @doc "Handler 5 ~ 750ms"
+  def test2(attrs \\ @handle5_attrs) do
+    now = Time.utc_now()
+
+    service_ids =
+      from w in Week,
+        join: c in Calendar,
+        on: c.name == w.name,
+        select: c.service_id,
+        where: field(w, ^attrs.day)
+
+    trip_ids =
+      from t in Trip,
+        select: t.id,
+        where: t.service_id in subquery(service_ids)
+
+    trip_ids =
+      from s in StopTime,
+        select: s.trip_id,
+        distinct: s.trip_id,
+        where: s.trip_id in subquery(trip_ids),
+        where: s.stop_id == ^attrs.stop_id1,
+        where:
+          fragment(
+            """
+                EXISTS (
+                SELECT * FROM stop_times as s1
+                WHERE s1.trip_id in ?
+                AND s1.stop_id = ?
+                AND s1.stop_sequence - ? = 1
+              )
+            """,
+            subquery(trip_ids),
+            ^attrs.stop_id2,
+            s.stop_sequence
+          )
+
+    route_ids =
+      from t in Trip,
+        select: t.route_id,
+        where: t.id in subquery(trip_ids),
+        where: t.service_id in subquery(service_ids)
+
+    query =
+      from r in Route,
+        where: r.id in subquery(route_ids)
+
+    Repo.all(query)
+    Time.diff(Time.utc_now(), now, :millisecond)
+  end
+
+  @handle6_attrs %{
+    route_id: 1771,
+    percent: 10,
+    day: :tuesday
+  }
+
+  @doc "Handler 6"
+  def route_substitute(attrs \\ @handle6_attrs) do
     services =
       from c in Calendar,
-        where: field(c, ^attrs.day) == true,
+        where: field(c, ^attrs.day),
         select: c.id
 
     trips =
       from t in Trip,
-        where: t.service_id in subquery(services),
-        select: t.id
-
-    stop_times1 =
-      from t in Time,
-        where: t.trip_id in subquery(trips),
-        where: t.stop_id == ^attrs.stop_id1,
-        select: t.trip_id
-
-    stop_times2 =
-      from t in Time,
-        where: t.trip_id in subquery(stop_times1),
-        where: t.stop_id == ^attrs.stop_id2,
-        join: t1 in Trip,
-        on: t1.id == t.trip_id,
-        select: [t1.route_id, t.arrival_time]
-
-    Repo.all(stop_times2)
-    |> Enum.map(fn [k, v] -> %{route: k, times: v} end)
-    |> Enum.group_by(& &1.route, & &1.times)
-    |> Enum.map(
-      fn {k, v} -> %{
-          route: k,
-          times: Enum.sort(v, :asc) |> Enum.group_by(& &1.hour)
-        }
-      end
-    )
-  end
-
-
-  def dist_between_points(coords) do
-    earth_radius = 6_371_210
-    uno_degree = Math.pi / 180
-
-    # half_earth = earth_radius * uno_degree
-
-    [
-      [lat1, lon1],
-      [lat2, lon2],
-    ] =
-      coords
-      |> Enum.map(
-        & Enum.map(&1, fn x -> x * uno_degree end)
-      )
-
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    a =
-      Math.sin(dlat / 2)**2 +
-      Math.cos(lat1) *
-      Math.cos(lat2) *
-      Math.sin(dlon / 2)**2
-
-    c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-    earth_radius * c
-
-  end
-
-
-  @doc "Handler 6"
-  def route_substitute(
-    attrs \\ %{
-      route_id: 1771,
-      percent: 10,
-      day: :tuesday
-    }
-  ) do
-
-    services =
-      from c in Calendar,
-        where: field(c, ^attrs.day) == true,
-        select: c.id
-
-    trips =
-       from t in Trip,
         where: t.route_id == ^attrs.route_id,
         where: t.service_id in subquery(services),
         select: t.shape_id
@@ -302,15 +279,14 @@ defmodule Feed.Utils.Handlers do
     route =
       Repo.all(shapes)
       |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.map(
-        fn x -> %{
-          coords:
-            Enum.map(x, &Enum.at(&1, 2)),
+      |> Enum.map(fn x ->
+        %{
+          coords: Enum.map(x, &Enum.at(&1, 2)),
           dist:
             Enum.map(x, &Enum.at(&1, 2))
-            |> dist_between_points()
-        } end
-      )
+            |> Toolkit.dist_between_points()
+        }
+      end)
 
     route_dist =
       route
@@ -319,39 +295,53 @@ defmodule Feed.Utils.Handlers do
 
     subsitutions =
       Repo.all(Shape)
-      |> Enum.sort_by(& [&1.shape_id, &1.pt_sequence])
+      |> Enum.sort_by(&[&1.shape_id, &1.pt_sequence])
       |> Enum.group_by(& &1.shape_id, & &1.coords)
-      |> Enum.map(
-        fn {k, v} ->
-           [k, Enum.chunk_every(v, 2, 1, :discard)
-               |> Enum.filter(
-                  fn x -> x in Enum.map(route, fn x -> x.coords end) end
-                )
-          ]
-        end
-      )
-      |> Enum.filter(& Enum.at(&1, 1) |> Enum.count() > 0)
-      |> Enum.map(
-        fn [k, v] ->
-           [k, v |> Enum.map(& dist_between_points(&1))
-                 |> Enum.sum()
-           ]
-        end
-      )
-      |> Enum.filter(&Enum.at(&1, 1) > route_dist * attrs.percent * 0.01)
+      |> Enum.map(fn {k, v} ->
+        [
+          k,
+          Enum.chunk_every(v, 2, 1, :discard)
+          |> Enum.filter(fn x -> x in Enum.map(route, fn x -> x.coords end) end)
+        ]
+      end)
+      |> Enum.filter(&(Enum.at(&1, 1) |> Enum.count() > 0))
+      |> Enum.map(fn [k, v] ->
+        [
+          k,
+          v
+          |> Enum.map(&Toolkit.dist_between_points(&1))
+          |> Enum.sum()
+        ]
+      end)
+      |> Enum.filter(&(Enum.at(&1, 1) > route_dist * attrs.percent * 0.01))
       |> Enum.map(&Enum.at(&1, 0))
 
-      sub =
-        from t in Trip,
+    sub =
+      from t in Trip,
         distinct: t.route_id,
         where: t.shape_id in ^subsitutions,
         where: t.route_id != ^attrs.route_id,
         select: t.route_id
 
-      query =
-        from r in Route,
+    query =
+      from r in Route,
         where: r.id in subquery(sub)
 
-      Repo.all(query)
+    Repo.all(query)
+  end
+
+  def test() do
+    one =
+      from t in Track,
+        where: t.track_id == "track-168185"
+
+    one = Repo.one(one)
+
+    two =
+      from t in Track,
+        # select: %{lenght: st_length(st_line(st_intersection(t.line, ^one.line))}
+        select: st_intersection(t.line, ^one.line)
+
+    Repo.all(two)
   end
 end

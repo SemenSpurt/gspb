@@ -2,64 +2,61 @@ defmodule Feed.Ecto.Shapes do
   import Ecto.Query, warn: false
   alias Feed.Repo
 
-  defmodule Shape do
+  defmodule Stage do
     use Ecto.Schema
     import Ecto.Changeset
 
-    @primary_key {:shape_id, :string, autogenerate: false}
-    schema "shapes" do
-      field :coords, {:array, :float}
-      field :pt_sequence, :integer
-      field :dist_traveled, :float
-      timestamps(type: :utc_datetime)
+    @primary_key {:stage_id, :string, autogenerate: false}
+    schema "stages" do
+      field :line, Geo.PostGIS.Geometry
     end
 
-    def changeset(shape, attrs) do
-      shape
-      |> cast(attrs, [
-        :shape_id,
-        :coords,
-        :pt_sequence,
-        :dist_traveled
-      ])
+    def changeset(stage, attrs) do
+      stage
+      |> cast(
+        attrs,
+        [
+          :stage_id,
+          :line
+        ]
+      )
       |> validate_required([
-        :shape_id,
-        :coords,
-        :pt_sequence,
-        :dist_traveled
+        :stage_id,
+        :line
       ])
     end
   end
 
-  def list_shapes do
-    Repo.all(Shape)
+  def list_stages do
+    Repo.all(Stage)
   end
 
+  defmodule Track do
+    use Ecto.Schema
+    import Ecto.Changeset
 
-  def get_shape!(id), do: Repo.get!(Shape, id)
+    @primary_key {:track_id, :string, autogenerate: false}
+    schema "tracks" do
+      field :line, Geo.PostGIS.Geometry
+    end
 
-
-  def create_shape(attrs \\ %{}) do
-    %Shape{}
-    |> Shape.changeset(attrs)
-    |> Repo.insert()
+    def changeset(track, attrs) do
+      track
+      |> cast(
+        attrs,
+        [
+          :track_id,
+          :line
+        ]
+      )
+      |> validate_required([
+        :track_id,
+        :line
+      ])
+    end
   end
 
-  def update_shape(%Shape{} = shape, attrs) do
-    shape
-    |> Shape.changeset(attrs)
-    |> Repo.update()
-  end
-
-  def delete_shape(%Shape{} = shape) do
-    Repo.delete(shape)
-  end
-
-  def change_shape(%Shape{} = shape, attrs \\ %{}) do
-    Shape.changeset(shape, attrs)
-  end
-
-  def import_records(records \\ %{}) do
-    Repo.insert_all(Shape, records)
+  def list_tracks do
+    Repo.all(Track)
   end
 end

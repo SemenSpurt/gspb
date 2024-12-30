@@ -6,8 +6,10 @@ defmodule StopTimesParser do
   # stop_id:              integer,
   # stop_sequence:        integer,
   # shape_id:             string,
-  # shape_dist_traveled:  float
+  # shape_dist_traveled:  float :drop
   # """
+
+  alias Feed.Utils.Toolkit
 
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/stop_times.txt"
 
@@ -84,5 +86,18 @@ defmodule StopTimesParser do
   def count_uniq_shape_id, do: stop_times() |> Enum.uniq_by(& &1.shape_id) |> Enum.count()
   # 27339
 
-
+  def check_stop_sequence_order do
+    StopTimesParser.stop_times()
+    |> Enum.group_by(& &1.trip_id, & &1.stop_sequence)
+    |> Enum.map(fn {k, v} ->
+      {k,
+       v
+       |> Enum.chunk_every(2, 1, :discard)
+       |> Enum.map(fn [a, b] -> b - a == 1 end)
+       |> Enum.all?()}
+    end)
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.all?()
+  end
+  # true
 end

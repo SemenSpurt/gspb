@@ -13,6 +13,8 @@ defmodule CalendarParser do
   # service_name: string
   # """
 
+  alias Feed.Utils.Toolkit
+
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/calendar.txt"
 
   def calendar(file_path \\ @file_path) do

@@ -7,6 +7,8 @@ defmodule FrequenciesParser do
   # exact_times:  integer  : drop
   # """
 
+  alias Feed.Utils.Toolkit
+
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/frequencies.txt"
 
   def frequencies(file_path \\ @file_path) do

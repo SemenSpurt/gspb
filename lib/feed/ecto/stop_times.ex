@@ -4,11 +4,10 @@ defmodule Feed.Ecto.StopTimes do
   alias Feed.{
     Repo,
     Ecto.Stops.Stop,
-    Ecto.Shapes.Shape,
+    Ecto.Shapes.Shape
   }
 
-
-  defmodule Time do
+  defmodule StopTime do
     use Ecto.Schema
     import Ecto.Changeset
 
@@ -18,31 +17,41 @@ defmodule Feed.Ecto.StopTimes do
         references: :id
 
       field :trip_id, :integer
+      # field :stop_times, Ecto.Enum,
+      #   values: [
+      #     arrival_time: :time,
+      #     departure_time: :time,
+      #     stop_sequence: :integer,
+      #     shape_id: :string,
+      #     shape_dist_traveled: :float
+      #   ]
+
       field :arrival_time, :time
       field :departure_time, :time
       field :stop_sequence, :integer
       field :shape_id, :string, defaults: nil
       field :shape_dist_traveled, :float
 
-      has_many :shapes, Shape,
-        foreign_key: :shape_id,
+      has_many :stages, Stage,
+        foreign_key: :stage_id,
         references: :shape_id,
         preload_order: [asc: :shape_pt_sequence]
-
-      timestamps(type: :utc_datetime)
     end
 
     def changeset(time, attrs) do
       time
-      |> cast(attrs, [
-        :trip_id,
-        :arrival_time,
-        :departure_time,
-        :stop_id,
-        :stop_sequence,
-        :shape_id,
-        :shape_dist_traveled
-      ])
+      |> cast(
+        attrs,
+        [
+          :trip_id,
+          :arrival_time,
+          :departure_time,
+          :stop_id,
+          :stop_sequence,
+          :shape_id,
+          :shape_dist_traveled
+        ]
+      )
       |> validate_required([
         :trip_id,
         :arrival_time,
@@ -56,38 +65,6 @@ defmodule Feed.Ecto.StopTimes do
   end
 
   def list_times do
-    Repo.all(Time)
-  end
-
-
-  def get_time!(id), do: Repo.get!(Time, id) |> Repo.preload(:shapes)
-
-
-  def create_time(attrs \\ %{}) do
-    %Time{}
-    |> Time.changeset(attrs)
-    |> Repo.insert()
-  end
-
-
-  def update_time(%Time{} = time, attrs) do
-    time
-    |> Time.changeset(attrs)
-    |> Repo.update()
-  end
-
-
-  def delete_time(%Time{} = time) do
-    Repo.delete(time)
-  end
-
-
-  def change_time(%Time{} = time, attrs \\ %{}) do
-    Time.changeset(time, attrs)
-  end
-
-
-  def import_records(records \\ %{}) do
-    Repo.insert_all(Time, records)
+    Repo.all(StopTime)
   end
 end

@@ -7,36 +7,65 @@ defmodule Feed.Services.Import.Shapes do
   # shape_dist_traveled:  float
   # """
 
-  alias Feed.Ecto.Shapes
+  alias Feed.{
+    Repo,
+    Ecto.Shapes.Stage,
+    Ecto.Shapes.Track
+  }
 
-  def import_records(file_path \\ "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt") do
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt"
+
+  def import_stages(file_path \\ @file_path) do
     file_path
     |> File.stream!()
-    |> Stream.chunk_every(1000)
-    |> Stream.map(
-      &FileParser.parse_stream(&1)
-      |> Enum.map(
-      fn [
-          shape_id,
-          pt_lat,
-          pt_lon,
-          pt_sequence,
-          dist_traveled
-        ] -> %{
-          shape_id: String.trim(shape_id),
-          coords: [
-            String.to_float(pt_lon),
-            String.to_float(pt_lat)
-          ],
-          pt_sequence: String.to_integer(pt_sequence),
-          dist_traveled: String.to_float(dist_traveled),
+    |> FileParser.parse_stream()
+    |> Stream.map(fn [stage_id, pt_lat, pt_lon, _, _] ->
+      %{
+        stage_id: String.trim(stage_id),
+        coords: {
+          String.to_float(pt_lon),
+          String.to_float(pt_lat)
+        }
+        # pt_sequence: String.to_integer(pt_sequence),
+        # dist_traveled: String.to_float(dist_traveled)
+      }
+    end)
+    |> Stream.filter(&(&1.stage_id |> String.starts_with?("stage")))
+    |> Enum.group_by(& &1.stage_id, & &1.coords)
+    |> Enum.map(fn {k, v} ->
+      %{
+        stage_id: k,
+        line: %Geo.LineString{coordinates: v}
+      }
+    end)
+    |> Enum.chunk_every(1000)
+    |> Enum.each(&Repo.insert_all(Stage, &1))
+  end
 
-          inserted_at: DateTime.utc_now(:second),
-          updated_at:  DateTime.utc_now(:second)
-        } end
-      )
-      |> Shapes.import_records()
-    )
-    |> Stream.run()
+  def import_tracks(file_path \\ @file_path) do
+    file_path
+    |> File.stream!()
+    |> FileParser.parse_stream()
+    |> Stream.map(fn [track_id, pt_lat, pt_lon, _, _] ->
+      %{
+        track_id: String.trim(track_id),
+        coords: {
+          String.to_float(pt_lon),
+          String.to_float(pt_lat)
+        }
+        # pt_sequence: String.to_integer(pt_sequence),
+        # dist_traveled: String.to_float(dist_traveled)
+      }
+    end)
+    |> Stream.filter(&(&1.track_id |> String.starts_with?("track")))
+    |> Enum.group_by(& &1.track_id, & &1.coords)
+    |> Enum.map(fn {k, v} ->
+      %{
+        track_id: k,
+        line: %Geo.LineString{coordinates: v}
+      }
+    end)
+    |> Enum.chunk_every(1000)
+    |> Enum.each(&Repo.insert_all(Track, &1))
   end
 end

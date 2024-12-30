@@ -10,6 +10,8 @@ defmodule StopParser do
   #   transport_type:       string
   # """
 
+  alias Feed.Utils.Toolkit
+
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/stops.txt"
 
   def stops(file_path \\ @file_path) do

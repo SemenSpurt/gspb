@@ -8,8 +8,7 @@ defmodule Feed.Repo.Migrations.CreateRoutes do
       add :transport, :string
       add :circular, :boolean
       add :urban, :boolean
-
-      timestamps(type: :utc_datetime)
     end
+    execute("CREATE EXTENSION IF NOT EXISTS postgis")
   end
 end

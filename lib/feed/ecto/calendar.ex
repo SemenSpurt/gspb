@@ -6,14 +6,53 @@ defmodule Feed.Ecto.Calendar do
     Ecto.Trips.Trip
   }
 
-
   defmodule Calendar do
     use Ecto.Schema
     import Ecto.Changeset
 
+    @primary_key {:service_id, :integer, autogenerate: false}
     schema "calendar" do
       field :start_date, :date
       field :end_date, :date
+      field :name, :string
+
+      has_one :week, Week,
+        foreign_key: :name,
+        references: :name
+
+      has_many :trips, Trip,
+        foreign_key: :service_id,
+        references: :service_id
+    end
+
+    def changeset(calendar, attrs) do
+      calendar
+      |> cast(attrs, [
+        :service_id,
+        :start_date,
+        :end_date,
+        :name
+      ])
+      |> validate_required([
+        :service_id,
+        :start_date,
+        :end_date,
+        :name
+      ])
+    end
+  end
+
+  def list_calendar do
+    Repo.all(Calendar)
+  end
+
+  defmodule Week do
+    use Ecto.Schema
+    import Ecto.Changeset
+
+    # @primary_key {:name, :string, autogenerate: false}
+    schema "week" do
+      field :name, :string, primary_key: true
       field :monday, :boolean
       field :tuesday, :boolean
       field :wednesday, :boolean
@@ -21,22 +60,15 @@ defmodule Feed.Ecto.Calendar do
       field :friday, :boolean
       field :saturday, :boolean
       field :sunday, :boolean
-      field :name, :string
 
-      has_many :trips, Trip,
-        foreign_key: :service_id,
-        references: :id
-
-      timestamps(type: :utc_datetime)
+      has_many :calendar, Calendar,
+        foreign_key: :name,
+        references: :name
     end
 
-    @doc false
-    def changeset(days, attrs) do
-      days
+    def changeset(week, attrs) do
+      week
       |> cast(attrs, [
-        :id,
-        :start_date,
-        :end_date,
         :monday,
         :tuesday,
         :wednesday,
@@ -45,11 +77,8 @@ defmodule Feed.Ecto.Calendar do
         :saturday,
         :sunday,
         :name
-        ])
+      ])
       |> validate_required([
-        :id,
-        :start_date,
-        :end_date,
         :monday,
         :tuesday,
         :wednesday,
@@ -58,44 +87,11 @@ defmodule Feed.Ecto.Calendar do
         :saturday,
         :sunday,
         :name
-        ])
+      ])
     end
   end
 
-
-  def list_days do
-    Repo.all(Calendar)
-  end
-
-
-  def get_days!(id), do: Repo.get!(Calendar, id)
-
-
-  def create_days(attrs \\ %{}) do
-    %Calendar{}
-    |> Calendar.changeset(attrs)
-    |> Repo.insert()
-  end
-
-
-  def update_days(%Calendar{} = days, attrs) do
-    days
-    |> Calendar.changeset(attrs)
-    |> Repo.update()
-  end
-
-
-  def delete_days(%Calendar{} = days) do
-    Repo.delete(days)
-  end
-
-
-  def change_days(%Calendar{} = calendar, attrs \\ %{}) do
-    Calendar.changeset(calendar, attrs)
-  end
-
-
-  def import_records(records \\ %{}) do
-    Repo.insert_all(Calendar, records)
+  def list_week do
+    Repo.all(Week)
   end
 end

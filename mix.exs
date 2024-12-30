@@ -32,6 +32,7 @@ defmodule Feed.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:geo_postgis, "~> 3.7"},
       {:math, "~> 0.6.0"},
       {:calendar, "~> 1.0.0"},
       {:dataloader, "~> 1.0.0"},

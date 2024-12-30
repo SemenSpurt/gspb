@@ -17,12 +17,17 @@ defmodule Feed.Utils.LoadDb do
       Trips,
       Stops,
       Freqs,
-      Shapes,
-      Calendar,
+      # Shapes,
+      # Calendar,
       StopTimes,
       CalendarDates
     ]
     |> Enum.map(& &1.import_records())
+
+    Shapes.import_stages()
+    Shapes.import_tracks()
+    Calendar.import_calendar()
+    Calendar.import_week
   end
 
 
