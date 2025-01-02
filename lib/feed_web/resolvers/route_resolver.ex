@@ -1,11 +1,15 @@
 defmodule FeedWeb.RouteResolver do
-  alias Feed.Route.Routes
+  alias Feed.Ecto.Routes
 
-  def list_routes(_root, _args, _info) do
-    {:ok, Routes.list_routes()}
+  def routes_dist_gt(_root, args, _info) do
+    {:ok, Routes.routes_dist_gt(args)}
   end
 
-  def get_route(_root, %{route_id: route_id}, _info) do
-    {:ok, Routes.get_route(route_id)}
+  def routes_over_stop(_root, args, _info) do
+    {:ok, Routes.routes_over_stop(args)}
+  end
+
+  def hourly_mean_arrival(_root, args, _info) do
+    {:ok, Routes.hourly_mean_arrival(args)}
   end
 end

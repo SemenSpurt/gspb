@@ -24,7 +24,7 @@ defmodule Feed.Utils.Handlers do
     types: [:bus, :tram],
     search: "",
     radius: 5750,
-    coords: {30.336146, 59.934243}
+    coords: [30.336146, 59.934243]
   }
 
   @doc "Handler 1"
@@ -36,10 +36,12 @@ defmodule Feed.Utils.Handlers do
         |> distinct([r], r.transport)
         |> Repo.all()
       else
-        attrs.types |> Enum.map(&Atom.to_string(&1))
+        attrs.types
+        # |> Enum.map(&Atom.to_string(&1))
       end
 
-    point = %Geo.Point{coordinates: attrs.coords}
+    point =
+      %Geo.Point{coordinates: List.to_tuple(attrs.coords)}
 
     Stop
     |> where([s], s.transport in ^types)
@@ -69,12 +71,25 @@ defmodule Feed.Utils.Handlers do
         attrs.types |> Enum.map(&Atom.to_string(&1))
       end
 
-    service_ids =
-      from w in Week,
-        join: c in Calendar,
-        on: c.name == w.name,
-        select: c.service_id,
-        where: field(w, ^attrs.day)
+    # service_ids =
+    #   from w in Week,
+    #     join: c in Calendar,
+    #     on: c.name == w.name,
+    #     select: c.service_id,
+    #     where: field(w, ^attrs.day)
+
+      service_ids =
+        Calendar
+        |> select([c], c.service_id)
+        |> where([c],
+          fragment("""
+            EXIST (
+              SELECT * FROM week AS w
+              WHERE w.service_name = ?
+              AND w.?
+            )
+          """, c.name, ^attrs.day)
+        )
 
     track_ids =
       from t in Track,
@@ -83,15 +98,27 @@ defmodule Feed.Utils.Handlers do
 
     trip_ids =
       from t in Trip,
-        select: t.route_id,
-        distinct: t.route_id,
+        # select: t.id,
+        # distinct: t.route_id,
         where: t.track_id in subquery(track_ids),
         where: t.service_id in subquery(service_ids)
 
     query =
       from r in Route,
-        where: r.id in subquery(trip_ids),
-        where: r.transport in ^types
+        where: r.transport in ^types,
+        where:
+          fragment(
+            """
+            EXISTS (
+              SELECT * FROM trips AS t
+              WHERE t.route_id == ?
+              AND t.track_id in ?
+              AND t.service_id in ?
+            """,
+            r.id,
+            subquery(track_ids),
+            subquery(service_ids)
+          )
 
     # Style pipe
     # query =
@@ -104,8 +131,8 @@ defmodule Feed.Utils.Handlers do
     #     where: st_length(t1.line) > (^attrs.dist_gt / 1000),
     #     where: ilike(r.long_name, ^"%#{attrs.search}%")
 
-    Repo.all(query)
-    Time.diff(Time.utc_now(), now, :millisecond)
+    Repo.all(service_ids)
+    # Time.diff(Time.utc_now(), now, :millisecond)
   end
 
   @handle3_attrs %{
@@ -151,7 +178,7 @@ defmodule Feed.Utils.Handlers do
   }
 
   @doc "Handler 4 ~ 300ms"
-  def hourly_mean_arrival_interval(attrs \\ @handle4_attrs) do
+  def route_on_stop_hourly_mean_arrival(attrs \\ @handle4_attrs) do
     now = Time.utc_now()
 
     service_ids =
@@ -225,12 +252,12 @@ defmodule Feed.Utils.Handlers do
         where:
           fragment(
             """
-                EXISTS (
-                SELECT * FROM stop_times as s1
-                WHERE s1.trip_id in ?
-                AND s1.stop_id = ?
-                AND s1.stop_sequence - ? = 1
-              )
+              EXISTS (
+              SELECT * FROM stop_times as s1
+              WHERE s1.trip_id in ?
+              AND s1.stop_id = ?
+              AND s1.stop_sequence - ? = 1
+            )
             """,
             subquery(trip_ids),
             ^attrs.stop_id2,

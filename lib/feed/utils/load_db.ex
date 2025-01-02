@@ -17,8 +17,6 @@ defmodule Feed.Utils.LoadDb do
       Trips,
       Stops,
       Freqs,
-      # Shapes,
-      # Calendar,
       StopTimes,
       CalendarDates
     ]
@@ -30,18 +28,6 @@ defmodule Feed.Utils.LoadDb do
     Calendar.import_week
   end
 
-
-
-  # tables = [
-  #   {Dates, "/src/feed/calendar_dates.txt"},
-  #   {Freqs, "/src/feed/frequencies.txt"},
-  #   {Times, "/src/feed/stop_times.txt"},
-  #   {Routes, "/src/feed/routes.txt"},
-  #   {Shapes, "/src/feed/shapes.txt"},
-  #   {Week, "/src/feed/calendar.txt"},
-  #   {Trips, "/src/feed/trips.txt"},
-  #   {Stops, "/src/feed/stops.txt"},
-  # ]
 
   # unzipped = File.ls!("src")
   #   |> Enum.map(&String.ends_with?(&1, ".txt"))

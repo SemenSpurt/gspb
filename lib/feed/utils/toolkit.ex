@@ -74,4 +74,23 @@ defmodule Feed.Utils.Toolkit do
 
     earth_radius * c
   end
+
+  def remove_tables(zip_file_path \\ "src/feed") do
+    File.ls!(zip_file_path)
+    |> Enum.filter(&String.ends_with?(&1, ".txt"))
+    |> Enum.map(&Path.expand(&1, zip_file_path))
+    |> Enum.map(&File.rm!(&1))
+  end
+
+  @doc "unzip feed.zip file by filepath"
+  def unpack_feed(zip_file_path \\ "src/feed") do
+    remove_tables(zip_file_path)
+
+    :zip.unzip(
+      ~c"src/feed.zip",
+      [{:cwd, ~c"src/feed"}]
+    )
+
+    remove_tables(zip_file_path)
+  end
 end

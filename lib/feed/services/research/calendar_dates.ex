@@ -9,7 +9,7 @@ defmodule CalendarDatesParser do
 
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/calendar_dates.txt"
 
-  def calendar_dates(file_path \\ @file_path) do
+  def records(file_path \\ @file_path) do
     file_path
     |> File.stream!()
     |> FileParser.parse_stream()
@@ -27,11 +27,11 @@ defmodule CalendarDatesParser do
   end
 
   @doc "0) Как много записей в таблице calendar_dates?"
-  def count_table_records, do: calendar_dates() |> Enum.count()
+  def count_table_records, do: records() |> Enum.count()
   # 269379
 
   @doc "1) Сколько всего уникальных service_id?"
-  def count_uniq_id, do: calendar_dates() |> Toolkit.count_uniq_in(:id)
+  def count_uniq_id, do: records() |> Toolkit.count_uniq_in(:id)
   # 866
 
   @doc "1.1) Сколько из них встречается в таблице trips?"
@@ -40,7 +40,7 @@ defmodule CalendarDatesParser do
       TripParser.trips()
       |> MapSet.new(& &1.service_id)
 
-    calendar_dates()
+    records()
     |> MapSet.new(& &1.id)
     |> MapSet.intersection(trips_services)
   end
@@ -50,7 +50,7 @@ defmodule CalendarDatesParser do
   @doc "1.1) Каковы частоты встречаемости service_id?"
   def service_id_frequencies do
     freqs =
-      calendar_dates()
+      records()
       |> Enum.frequencies_by(& &1.id)
       |> Enum.sort_by(&elem(&1, 1), :desc)
 
@@ -67,7 +67,7 @@ defmodule CalendarDatesParser do
 
   @doc "2) Какие значения принимает столбец exception_type?"
   def exception_type_frequencies do
-    calendar_dates()
+    records()
     |> Enum.frequencies_by(& &1.type)
   end
 
@@ -78,7 +78,7 @@ defmodule CalendarDatesParser do
     now = DateTime.utc_now()
 
     dates =
-      calendar_dates()
+      records()
       |> Enum.sort_by(& &1.date)
 
     [
@@ -126,7 +126,7 @@ defmodule CalendarDatesParser do
     [min, max] =
       CalendarParser.date_outer_range()
 
-    calendar_dates()
+    records()
     |> Enum.filter(fn x ->
       Date.compare(x.date, min) == :gt and
         Date.compare(x.date, max) == :lt

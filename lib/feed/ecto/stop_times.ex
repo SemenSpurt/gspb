@@ -12,11 +12,28 @@ defmodule Feed.Ecto.StopTimes do
     import Ecto.Changeset
 
     schema "stop_times" do
-      belongs_to :stop, Stop,
-        foreign_key: :stop_id,
-        references: :id
-
       field :trip_id, :integer
+
+      embeds_many :check_points, CheckPoint do
+        belongs_to :stop, Stop,
+          foreign_key: :stop_id,
+          references: :id
+
+        field :shape_id, :string
+        field :arrival_time, :time
+        field :departure_time, :time
+        field :stop_sequence, :integer
+        field :shape_dist_traveled, :float
+
+        has_many :stages, Stage,
+          foreign_key: :stage_id,
+          references: :shape_id,
+          preload_order: [asc: :shape_pt_sequence]
+      end
+
+            # belongs_to :stop, Stop,
+      #   foreign_key: :stop_id,
+      #   references: :id
       # field :stop_times, Ecto.Enum,
       #   values: [
       #     arrival_time: :time,
@@ -26,16 +43,16 @@ defmodule Feed.Ecto.StopTimes do
       #     shape_dist_traveled: :float
       #   ]
 
-      field :arrival_time, :time
-      field :departure_time, :time
-      field :stop_sequence, :integer
-      field :shape_id, :string, defaults: nil
-      field :shape_dist_traveled, :float
+      # field :arrival_time, :time
+      # field :departure_time, :time
+      # field :stop_sequence, :integer
+      # field :shape_id, :string, defaults: nil
+      # field :shape_dist_traveled, :float
 
-      has_many :stages, Stage,
-        foreign_key: :stage_id,
-        references: :shape_id,
-        preload_order: [asc: :shape_pt_sequence]
+      # has_many :stages, Stage,
+      #   foreign_key: :stage_id,
+      #   references: :shape_id,
+      #   preload_order: [asc: :shape_pt_sequence]
     end
 
     def changeset(time, attrs) do
