@@ -4,7 +4,7 @@ defmodule Feed.Ecto.StopTimes do
   alias Feed.{
     Repo,
     Ecto.Stops.Stop,
-    Ecto.Shapes.Shape
+    Ecto.Shapes.Stage
   }
 
   defmodule StopTime do
@@ -14,45 +14,39 @@ defmodule Feed.Ecto.StopTimes do
     schema "stop_times" do
       field :trip_id, :integer
 
-      embeds_many :check_points, CheckPoint do
-        belongs_to :stop, Stop,
-          foreign_key: :stop_id,
-          references: :id
+      # embeds_many :check_points, CheckPoint do
+      #   belongs_to :stop, Stop,
+      #     foreign_key: :stop_id,
+      #     references: :id
 
-        field :shape_id, :string
-        field :arrival_time, :time
-        field :departure_time, :time
-        field :stop_sequence, :integer
-        field :shape_dist_traveled, :float
+      #   field :shape_id, :string
+      #   field :arrival_time, :time
+      #   field :departure_time, :time
+      #   field :stop_sequence, :integer
+      #   field :shape_dist_traveled, :float
 
-        has_many :stages, Stage,
-          foreign_key: :stage_id,
-          references: :shape_id,
-          preload_order: [asc: :shape_pt_sequence]
-      end
+      #   has_many :stages, Stage,
+      #     foreign_key: :stage_id,
+      #     references: :shape_id,
+      #     preload_order: [asc: :shape_pt_sequence]
+      # end
 
-            # belongs_to :stop, Stop,
-      #   foreign_key: :stop_id,
-      #   references: :id
-      # field :stop_times, Ecto.Enum,
-      #   values: [
-      #     arrival_time: :time,
-      #     departure_time: :time,
-      #     stop_sequence: :integer,
-      #     shape_id: :string,
-      #     shape_dist_traveled: :float
-      #   ]
 
-      # field :arrival_time, :time
-      # field :departure_time, :time
-      # field :stop_sequence, :integer
-      # field :shape_id, :string, defaults: nil
-      # field :shape_dist_traveled, :float
 
-      # has_many :stages, Stage,
-      #   foreign_key: :stage_id,
-      #   references: :shape_id,
-      #   preload_order: [asc: :shape_pt_sequence]
+      belongs_to :stop, Stop,
+        foreign_key: :stop_id,
+        references: :id
+
+      field :arrival_time, :time
+      field :departure_time, :time
+      field :stop_sequence, :integer
+      field :shape_id, :string, defaults: nil
+      field :shape_dist_traveled, :float
+
+      has_many :stages, Stage,
+        foreign_key: :stage_id,
+        references: :shape_id,
+        preload_order: [asc: :shape_pt_sequence]
     end
 
     def changeset(time, attrs) do

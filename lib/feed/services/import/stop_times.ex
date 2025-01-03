@@ -40,22 +40,22 @@ defmodule Feed.Services.Import.StopTimes do
         shape_dist_traveled: String.to_float(shape_dist_traveled)
       }
     end)
-    |> Enum.group_by(
-      & &1.trip_id,
-      & %StopTime.CheckPoint{
-        stop_id: &1.stop_id,
-        stop_sequence: &1.stop_sequence,
-        arrival_time: &1.arrival_time,
-        departure_time: &1.departure_time,
-        shape_id: &1.shape_id
-      }
-    )
-    |> Enum.map(fn {k, v} ->
-      %{
-        trip_id: k,
-        check_points: v
-      }
-    end)
+    # |> Enum.group_by(
+    #   & &1.trip_id,
+    #   & %StopTime.CheckPoint{
+    #     stop_id: &1.stop_id,
+    #     stop_sequence: &1.stop_sequence,
+    #     arrival_time: &1.arrival_time,
+    #     departure_time: &1.departure_time,
+    #     shape_id: &1.shape_id
+    #   }
+    # )
+    # |> Enum.map(fn {k, v} ->
+    #   %{
+    #     trip_id: k,
+    #     check_points: v
+    #   }
+    # end)
     |> Enum.chunk_every(1000)
     |> Enum.each(&Repo.insert_all(StopTime, &1))
   end

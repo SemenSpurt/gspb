@@ -17,7 +17,7 @@ defmodule FeedWeb.Schema do
     @desc "Show stops within the radius specified"
     field :stops_nearby, list_of(:stop) do
       arg(:search, :string, default_value: "")
-      arg(:radius, :integer, default_value: 1500)
+      arg(:radius, :integer, default_value: 500)
       arg(:types, list_of(:string), default_value: [])
       arg(:coords, list_of(:float), default_value: [30.336146, 59.934243])
       resolve(&StopResolver.stops_within_radius/3)
@@ -44,6 +44,22 @@ defmodule FeedWeb.Schema do
       arg(:stop_id, :integer, default_value: 18840)
       arg(:day, :string, default_value: :tuesday)
       resolve(&RouteResolver.hourly_mean_arrival/3)
+    end
+
+    @desc "Show routes that go throught two subsequent stops"
+    field :routes_between_two_stops, list_of(:route) do
+      arg(:stop_id1, :integer, default_value: 18840)
+      arg(:stop_id2, :integer, default_value: 18840)
+      arg(:day, :string, default_value: :tuesday)
+      resolve(&RouteResolver.routes_between_two_stops/3)
+    end
+
+    @desc "Show routes that have similarity percent"
+    field :route_substitutions, list_of(:route) do
+      arg(:route_id, :integer, default_value: 237)
+      arg(:percent, :integer, default_value: 25)
+      arg(:day, :string, default_value: :tuesday)
+      resolve(&RouteResolver.route_substitutions/3)
     end
   end
 end

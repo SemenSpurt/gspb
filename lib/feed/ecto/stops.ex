@@ -18,7 +18,8 @@ defmodule Feed.Ecto.Stops do
     @doc false
     def changeset(stop, attrs) do
       stop
-      |> cast(attrs,
+      |> cast(
+        attrs,
         [
           :id,
           :name,
@@ -26,14 +27,12 @@ defmodule Feed.Ecto.Stops do
           :transport
         ]
       )
-      |> validate_required(
-        [
-          :id,
-          :name,
-          :coords,
-          :transport
-        ]
-      )
+      |> validate_required([
+        :id,
+        :name,
+        :coords,
+        :transport
+      ])
     end
   end
 
@@ -41,23 +40,17 @@ defmodule Feed.Ecto.Stops do
     Repo.all(Stop)
   end
 
-
-  @handle1_attrs %{
-    types: [:bus, :tram],
-    search: "",
-    radius: 5750,
-    coords: [30.336146, 59.934243]
-  }
-  @doc ""
-  def stops_within_radius(args \\ @handle1_attrs) do
+  @doc "Handler 1 ~ 30ms) List stops within radius specified"
+  def stops_within_radius(args) do
     types =
       if args.types == [] do
-        Route
+        Stop
         |> select([r], r.transport)
         |> distinct([r], r.transport)
         |> Repo.all()
       else
-        args.types #|> Enum.map(&Atom.to_string(&1))
+        # |> Enum.map(&Atom.to_string(&1))
+        args.types
       end
 
     point =

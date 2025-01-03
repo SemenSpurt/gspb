@@ -110,6 +110,19 @@ defmodule StopTimesParser do
     )
   end
 
+  def groupby_trips_stops1 do
+    StopTimesParser.records()
+    |> Enum.group_by(
+      & &1.stop_id,
+      & %{
+        trip_id: &1.trip_id,
+        arrival: &1.arrival_time,
+        departure: &1.departure_time,
+        index: &1.stop_sequence
+      }
+    )
+  end
+
   @doc "Check arrival : departure time"
   def arrival_to_departure do
     StopTimesParser.records()

@@ -1,4 +1,13 @@
 defmodule Feed.Utils.Toolkit do
+
+  @doc "Steam file, parse it and map types"
+  def uniparse(file_path, parse_func) do
+    file_path
+    |> File.stream!()
+    |> FileParser.parse_stream()
+    |> Enum.map(parse_func)
+  end
+
   @doc "Count unique values in table column"
   def count_uniq_in(table, column) do
     table

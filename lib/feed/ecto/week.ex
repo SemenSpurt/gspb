@@ -11,8 +11,8 @@ defmodule Feed.Ecto.Week do
     use Ecto.Schema
     import Ecto.Changeset
 
-    @primary_key {:service_name, :string, autogenerate: false}
     schema "week" do
+      field :name, :string, primary_key: true
       field :monday, :boolean
       field :tuesday, :boolean
       field :wednesday, :boolean
@@ -24,7 +24,7 @@ defmodule Feed.Ecto.Week do
 
       has_many :calendar, Calendar,
         foreign_key: :name,
-        references: :service_name
+        references: :name
     end
 
 
