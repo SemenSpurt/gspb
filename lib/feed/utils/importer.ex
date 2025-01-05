@@ -3,41 +3,30 @@ defmodule Feed.Utils.Importer do
 
   alias Feed.Ecto
   alias Feed.Services.Research
+  alias Feed.Utils.Toolkit
 
-  def rm_except_zip_in_src(path \\ "src") do
+  # Import multiple feeds regarding to their date of origin
+  def import_all(path \\ "src") do
+    # Clean up src dir
+    Toolkit.rm_except_zip_in_src(path)
+
+    # List feed.zip files, unzip subsequently
+    Toolkit.list_zip_in_src(path)
+    |> Enum.each(&Toolkit.unzip_one(&1))
+
+    # List uziped folders
+    # Run import function for each feed folder
     File.ls!(path)
     |> Enum.filter(&(not String.ends_with?(&1, ".zip")))
     |> Enum.map(&Path.expand(&1, path))
-    |> Enum.map(&File.rm_rf!(&1))
+    |> Enum.map(&import_feed(&1))
+
+    # Clean up src dir
+    Toolkit.rm_except_zip_in_src(path)
   end
 
-  def list_zip_in_src(path \\ "src") do
-    File.ls!(path)
-    |> Enum.filter(&String.ends_with?(&1, ".zip"))
-    |> Enum.map(&Path.expand(&1, path))
-  end
-
-  def unzip_one(file) do
-    :zip.unzip(
-      ~c"#{file}",
-      [{:cwd, ~c"#{String.trim(file, ".zip")}"}]
-    )
-  end
-
-  def get_date_from_filepath(feed) do
-    feed
-    |> String.trim("/")
-    |> String.split("/")
-    |> Enum.at(-1)
-    |> String.trim("feed_")
-    |> String.split(".")
-    |> Enum.reverse()
-    |> Enum.join("-")
-    |> Date.from_iso8601!()
-  end
-
-  def import_feed(feed_dir_path \\ "C:/Users/SamJa/Desktop/gspb/src/feed_02.09.2023/") do
-    date = get_date_from_filepath(feed_dir_path)
+  def import_feed(feed_dir_path) do
+    date = Toolkit.get_date_from_filepath(feed_dir_path)
 
     weekday =
       date
@@ -45,7 +34,7 @@ defmodule Feed.Utils.Importer do
       |> String.downcase()
       |> String.to_atom()
 
-    # Import actual week days for feed
+    # Import week schedules in distinct table
     service_type_names =
       Research.Calendar.records(feed_dir_path)
       |> Enum.map(
@@ -72,7 +61,7 @@ defmodule Feed.Utils.Importer do
       returning: false
     )
 
-    # Save service_names for feed
+    # Save service_names for each feed
     type_names =
       service_type_names
       |> Enum.filter(& &1[weekday])
@@ -209,20 +198,5 @@ defmodule Feed.Utils.Importer do
         returning: false
       )
     )
-  end
-
-  def import_all(path \\ "src") do
-    rm_except_zip_in_src(path)
-
-    list_zip_in_src(path)
-    |> Enum.each(
-      &(unzip_one(&1)))
-
-    File.ls!(path)
-    |> Enum.filter(& not String.ends_with?(&1, ".zip"))
-    |> Enum.map(&Path.expand(&1, path))
-    |> Enum.map(&import_feed(&1))
-
-    rm_except_zip_in_src()
   end
 end

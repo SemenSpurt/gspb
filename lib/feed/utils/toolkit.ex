@@ -1,5 +1,4 @@
 defmodule Feed.Utils.Toolkit do
-
   @doc "Steam file, parse it and map types"
   def uniparse(file_path, parse_func) do
     file_path
@@ -84,22 +83,35 @@ defmodule Feed.Utils.Toolkit do
     earth_radius * c
   end
 
-  def remove_tables(zip_file_path \\ "src/feed") do
-    File.ls!(zip_file_path)
-    |> Enum.filter(&String.ends_with?(&1, ".txt"))
-    |> Enum.map(&Path.expand(&1, zip_file_path))
-    |> Enum.map(&File.rm!(&1))
+  def rm_except_zip_in_src(path \\ "src") do
+    File.ls!(path)
+    |> Enum.filter(&(not String.ends_with?(&1, ".zip")))
+    |> Enum.map(&Path.expand(&1, path))
+    |> Enum.map(&File.rm_rf!(&1))
   end
 
-  @doc "unzip feed.zip file by filepath"
-  def unpack_feed(zip_file_path \\ "src/feed") do
-    remove_tables(zip_file_path)
+  def list_zip_in_src(path \\ "src") do
+    File.ls!(path)
+    |> Enum.filter(&String.ends_with?(&1, ".zip"))
+    |> Enum.map(&Path.expand(&1, path))
+  end
 
+  def unzip_one(file) do
     :zip.unzip(
-      ~c"src/feed.zip",
-      [{:cwd, ~c"src/feed"}]
+      ~c"#{file}",
+      [{:cwd, ~c"#{String.trim(file, ".zip")}"}]
     )
+  end
 
-    remove_tables(zip_file_path)
+  def get_date_from_filepath(feed) do
+    feed
+    |> String.trim("/")
+    |> String.split("/")
+    |> Enum.at(-1)
+    |> String.trim("feed_")
+    |> String.split(".")
+    |> Enum.reverse()
+    |> Enum.join("-")
+    |> Date.from_iso8601!()
   end
 end
