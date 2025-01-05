@@ -15,10 +15,10 @@ defmodule Feed.Services.Import.StopTimes do
     Ecto.StopTimes.StopTime
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/stop_times.txt"
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def import_records(file_path \\ @file_path) do
-    file_path
+    file_path <> "stop_times.txt"
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [

@@ -1,4 +1,4 @@
-defmodule StopParser do
+defmodule Feed.Services.Research.Stops do
   # """
   #   stop_id:              integer,
   #   stop_code:            integer, # drop
@@ -12,55 +12,50 @@ defmodule StopParser do
 
   alias Feed.Utils.Toolkit
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/stops.txt"
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def records(file_path \\ @file_path) do
-    file_path
+    Path.expand("stops.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(
-      fn [
-        id,
-        _, # code
-        name,
-        lat,
-        lon,
-        _, # loc_type
-        _, # chair_board
-        transport
-      ] -> %{
+    |> Enum.map(fn [
+                     id,
+                     _,
+                     name,
+                     lat,
+                     lon,
+                     _,
+                     _,
+                     transport
+                   ] ->
+      %{
         id: String.to_integer(id),
-        # code: String.to_integer(code),
         name: String.trim(name),
-        coords: [
-          String.to_float(lon),
-          String.to_float(lat)
-        ],
-        # loc_type: String.to_integer(loc_type),
-        # chair_board: String.to_integer(chair_board),
+        coords: %Geo.Point{
+          coordinates: {
+            String.to_float(lon),
+            String.to_float(lat)
+          }
+        },
         transport: String.trim(transport)
       }
     end)
   end
 
-
   @doc "0) Как много записей в таблице stops?"
   def count_table_records, do: records() |> Enum.count()
   # 8557
-
 
   @doc "1.1) Сколько всего уникальных stop_id?"
   def count_uniq_id, do: records() |> Toolkit.count_uniq_in(:id)
   # 8557
 
-
   @doc "2.1) Сколько всего уникальных stop_code?"
   def count_uniq_code, do: records() |> Toolkit.count_uniq_in(:code)
   # 8557
 
-
   @doc "2.2) В каких записях stop_id != stop_code?"
-  def id_to_code_missmatches, do: records() |> Enum.filter(& &1.id != &1.code)
+  def id_to_code_missmatches, do: records() |> Enum.filter(&(&1.id != &1.code))
   # [
   #   %{
   #     code: 41870,
@@ -91,49 +86,45 @@ defmodule StopParser do
   #   }
   # ]
 
-
   @doc "Посмотреть эти записи на карте"
   def geojson_id_to_code_missmatches do
     records()
-    |> Enum.filter(& &1.id != &1.code)
+    |> Enum.filter(&(&1.id != &1.code))
     |> Enum.map(& &1.coords)
     |> Toolkit.geojson_string()
     |> IO.puts()
   end
 
-
   @doc "3) Сколько уникальных stop_name?"
   def count_uniq_name, do: records() |> Toolkit.count_uniq_in(:name)
   # 4288
-
 
   @doc "3.1) Изменится ли N уникальных stop_name после replace & upcase?"
   def name_uniq_counts do
     records()
     |> Enum.uniq_by(
-      & &1.name
-      |> String.upcase
-      |> String.replace(["ПЕРЕУЛОК ", "ПЕР ", "ПЕР. ", "ПЕР., "], "ПЕР. ")
-      |> String.replace(["УЛИЦА ", "УЛ ", "УЛ. ", "УЛ., "], "УЛ. ")
-      |> String.replace(["\"", ".", ","], "")
+      &(&1.name
+        |> String.upcase()
+        |> String.replace(["ПЕРЕУЛОК ", "ПЕР ", "ПЕР. ", "ПЕР., "], "ПЕР. ")
+        |> String.replace(["УЛИЦА ", "УЛ ", "УЛ. ", "УЛ., "], "УЛ. ")
+        |> String.replace(["\"", ".", ","], ""))
     )
-    |> Enum.count
+    |> Enum.count()
   end
+
   # 3590
 
   def parse_stop_name(name) do
     name
-    |> String.upcase
+    |> String.upcase()
     |> String.replace(["ПЕРЕУЛОК ", "ПЕР ", "ПЕР. ", "ПЕР., "], "ПЕР. ")
     |> String.replace(["УЛИЦА ", "УЛ ", "УЛ. ", "УЛ., "], "УЛ. ")
     |> String.replace(["\""], "")
   end
 
-
   @doc "4) Сколько уникальных [stop_lat, stop_lon]?"
   def coords_uniq_counts, do: records() |> Toolkit.count_uniq_in(:coords)
   # 8542
-
 
   @doc "4.1) Проверить дуюли координат [stop_lat, stop_lon]?"
   def coords_dubles do
@@ -150,8 +141,8 @@ defmodule StopParser do
     |> Enum.filter(fn row -> row.coords in coords end)
     |> Enum.group_by(& &1.coords, & &1.name)
   end
-  # . . .
 
+  # . . .
 
   @doc "4.2) Посмотреть на карте дубли координат"
   def geojson_duplicates_coords do
@@ -162,23 +153,21 @@ defmodule StopParser do
     |> Toolkit.geojson_string()
     |> IO.puts()
   end
-  #
 
+  #
 
   @doc "5.1) Что такое location_type и какие значения принимает?"
   def loc_type_frequencies, do: records() |> Enum.frequencies_by(& &1.loc_type)
   # %{0 => 8557}
   # наземная остановка ?
 
-
   @doc "6.1) Что такое wheelchair_boarding и какие значения принимает?"
   def chair_board_frequencies, do: records() |> Enum.frequencies_by(& &1.chair_board)
   # %{1 => 1, 2 => 8556}
   # остановка для ограниченно мобильных пассажиров?
 
-
   @doc "6.2) Проверить, какая записть содержит единственный :chair_board => 1?"
-  def chair_board_equal_one, do: records() |> Enum.filter(& &1.chair_board == 1)
+  def chair_board_equal_one, do: records() |> Enum.filter(&(&1.chair_board == 1))
 
   # [
   # %{
@@ -192,12 +181,9 @@ defmodule StopParser do
   # }
   # ]
 
-
   @doc "7) Что такое transport_type и какие значения принимает?"
   def transport_frequencies, do: records() |> Enum.frequencies_by(& &1.transport)
   # %{"bus" => 6316, "tram" => 897, "trolley" => 1344}
-
-
 
   @doc "Есть ли такие stop_id, которых нет в stop_times?"
   def stop_id_to_stop_times_stop_id do
@@ -206,7 +192,6 @@ defmodule StopParser do
     |> MapSet.difference(
       StopTimesParser.records()
       |> MapSet.new(& &1.stop_id)
-      )
+    )
   end
-
 end

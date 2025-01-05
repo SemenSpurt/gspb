@@ -20,10 +20,12 @@ defmodule Feed.Services.Import.Calendar do
     Ecto.Calendar.Week
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/calendar.txt"
+  alias Feed.Services.Research.Calendar
+
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def import_calendar(file_path \\ @file_path) do
-    file_path
+    file_path <> "calendar.txt"
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [service_id, _, _, _, _, _, _, _, start_date, end_date, name] ->
@@ -39,7 +41,7 @@ defmodule Feed.Services.Import.Calendar do
   end
 
   def import_week(file_path \\ @file_path) do
-    file_path
+    file_path <> "calendar.txt"
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [
@@ -68,6 +70,6 @@ defmodule Feed.Services.Import.Calendar do
     end)
     |> Enum.uniq_by(& &1.name)
     |> Enum.chunk_every(1)
-    |> Enum.each(&Repo.insert_all(Week, &1))
+    |> Enum.each(&Repo.insert_all(Week, &1, on_conflict: :nothing))
   end
 end

@@ -9,4 +9,9 @@ defmodule FeedWeb.Schema.RouteTypes do
     field :circular, :boolean
     field :urban, :boolean
   end
+
+  object :trip_frequencies do
+    field :hour, :integer
+    field :interval, :float
+  end
 end

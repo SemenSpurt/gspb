@@ -1,4 +1,4 @@
-defmodule CalendarDatesParser do
+defmodule Feed.Services.Research.CalendarDates do
   # """
   # service_id:     integer,
   # date:           date, : удалить избыточные
@@ -7,17 +7,22 @@ defmodule CalendarDatesParser do
 
   alias Feed.Utils.Toolkit
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/calendar_dates.txt"
+  alias Feed.Services.Research.{
+    Trips,
+    Calendar
+  }
+
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def records(file_path \\ @file_path) do
-    file_path
+    Path.expand("calendar_dates.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
-                     id,
-                     date,
-                     type
-                   ] ->
+    |> Stream.map(fn [
+                       id,
+                       date,
+                       type
+                     ] ->
       %{
         id: String.to_integer(id),
         type: String.to_integer(type),
@@ -37,7 +42,7 @@ defmodule CalendarDatesParser do
   @doc "1.1) Сколько из них встречается в таблице trips?"
   def calendar_dates_service_id_to_trips_service_id do
     trips_services =
-      TripParser.trips()
+      Trips.records()
       |> MapSet.new(& &1.service_id)
 
     records()
@@ -124,7 +129,7 @@ defmodule CalendarDatesParser do
 
   def filter_false_dates do
     [min, max] =
-      CalendarParser.date_outer_range()
+      Calendar.date_outer_range()
 
     records()
     |> Enum.filter(fn x ->

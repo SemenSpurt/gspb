@@ -14,25 +14,12 @@ defmodule Feed.Services.Import.Routes do
 
   alias Feed.{
     Repo,
-    Ecto.Routes.Route
+    Ecto.Routes.Route,
+    Services.Research.Routes
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/routes.txt"
-
-  def import_records(file_path \\ @file_path) do
-    file_path
-    |> File.stream!()
-    |> FileParser.parse_stream()
-    |> Enum.map(fn [id, _, short_name, long_name, _, transport, circular, urban, _] ->
-      %{
-        id: String.to_integer(id),
-        short_name: String.trim(short_name),
-        long_name: String.trim(long_name),
-        transport: String.trim(transport),
-        circular: String.to_integer(circular) == 1,
-        urban: String.to_integer(urban) == 1
-      }
-    end)
+  def import_records() do
+    Routes.records()
     |> Stream.chunk_every(1000)
     |> Enum.each(&Repo.insert_all(Route, &1))
   end

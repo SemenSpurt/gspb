@@ -1,4 +1,4 @@
-defmodule StopTimesParser do
+defmodule Feed.Services.Research.StopTimes do
   # """
   # trip_id:              integer,
   # arrival_time:         time,
@@ -11,10 +11,14 @@ defmodule StopTimesParser do
 
   alias Feed.Utils.Toolkit
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/stop_times.txt"
+  alias Feed.Services.Research.{
+    Stops
+  }
+
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def records(file_path \\ @file_path) do
-    file_path
+    Path.expand("stop_times.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Enum.map(fn [
@@ -23,7 +27,7 @@ defmodule StopTimesParser do
                      departure_time,
                      stop_id,
                      stop_sequence,
-                     shape_id,
+                     stage_id,
                      shape_dist_traveled
                    ] ->
       %{
@@ -32,7 +36,7 @@ defmodule StopTimesParser do
         departure_time: Toolkit.time_from_seconds_after_midnight(departure_time),
         stop_id: String.to_integer(stop_id),
         stop_sequence: String.to_integer(stop_sequence),
-        shape_id: String.trim(shape_id),
+        stage_id: String.trim(stage_id),
         shape_dist_traveled: String.to_float(shape_dist_traveled)
       }
     end)
@@ -49,7 +53,7 @@ defmodule StopTimesParser do
   @doc "1.1) Есть ли в этой таблице stop_id, которых нет в таблице stops?"
   def are_there_stop_ids_missed_in_stops_table? do
     stops =
-      StopParser.stops()
+      Stops.records()
       |> MapSet.new(& &1.stop_id)
 
     records()
@@ -82,7 +86,7 @@ defmodule StopTimesParser do
   # 27339
 
   def check_stop_sequence_order do
-    StopTimesParser.records()
+    records()
     |> Enum.group_by(& &1.trip_id, & &1.stop_sequence)
     |> Enum.map(fn {k, v} ->
       {k,
@@ -98,7 +102,7 @@ defmodule StopTimesParser do
   # true
 
   def groupby_trips_stops do
-    StopTimesParser.records()
+    records()
     |> Enum.group_by(
       & &1.trip_id,
       &%{
@@ -111,10 +115,10 @@ defmodule StopTimesParser do
   end
 
   def groupby_trips_stops1 do
-    StopTimesParser.records()
+    records()
     |> Enum.group_by(
       & &1.stop_id,
-      & %{
+      &%{
         trip_id: &1.trip_id,
         arrival: &1.arrival_time,
         departure: &1.departure_time,
@@ -125,7 +129,7 @@ defmodule StopTimesParser do
 
   @doc "Check arrival : departure time"
   def arrival_to_departure do
-    StopTimesParser.records()
-    |> Enum.filter(&Time.diff(&1.departure_time, &1.arrival_time) >= 0)
+    records()
+    |> Enum.filter(&(Time.diff(&1.departure_time, &1.arrival_time) >= 0))
   end
 end

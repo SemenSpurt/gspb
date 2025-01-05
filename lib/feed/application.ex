@@ -4,7 +4,6 @@ defmodule Feed.Application do
   @moduledoc false
 
   use Application
-
   NimbleCSV.define(FileParser, separator: ",", escape: "\"")
 
   @impl true

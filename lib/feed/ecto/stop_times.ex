@@ -12,7 +12,7 @@ defmodule Feed.Ecto.StopTimes do
     import Ecto.Changeset
 
     schema "stop_times" do
-      field :trip_id, :integer
+
 
       # embeds_many :check_points, CheckPoint do
       #   belongs_to :stop, Stop,
@@ -31,7 +31,7 @@ defmodule Feed.Ecto.StopTimes do
       #     preload_order: [asc: :shape_pt_sequence]
       # end
 
-
+      field :trip_id, :integer
 
       belongs_to :stop, Stop,
         foreign_key: :stop_id,
@@ -40,12 +40,12 @@ defmodule Feed.Ecto.StopTimes do
       field :arrival_time, :time
       field :departure_time, :time
       field :stop_sequence, :integer
-      field :shape_id, :string, defaults: nil
+      field :stage_id, :string, defaults: nil
       field :shape_dist_traveled, :float
 
       has_many :stages, Stage,
         foreign_key: :stage_id,
-        references: :shape_id,
+        references: :stage_id,
         preload_order: [asc: :shape_pt_sequence]
     end
 
@@ -59,7 +59,7 @@ defmodule Feed.Ecto.StopTimes do
           :departure_time,
           :stop_id,
           :stop_sequence,
-          :shape_id,
+          :stage_id,
           :shape_dist_traveled
         ]
       )
@@ -69,7 +69,7 @@ defmodule Feed.Ecto.StopTimes do
         :departure_time,
         :stop_id,
         :stop_sequence,
-        :shape_id,
+        :stage_id,
         :shape_dist_traveled
       ])
     end

@@ -13,10 +13,10 @@ defmodule Feed.Services.Import.Shapes do
     Ecto.Shapes.Track
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt"
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def import_stages(file_path \\ @file_path) do
-    file_path
+    file_path <> "shapes.txt"
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [stage_id, pt_lat, pt_lon, _, _] ->
@@ -43,7 +43,7 @@ defmodule Feed.Services.Import.Shapes do
   end
 
   def import_tracks(file_path \\ @file_path) do
-    file_path
+    file_path <> "shapes.txt"
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [track_id, pt_lat, pt_lon, _, _] ->

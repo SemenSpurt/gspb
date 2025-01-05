@@ -1,4 +1,4 @@
-defmodule ShapeParser do
+defmodule Feed.Services.Research.Shapes do
   # """
   # shape_id:             string
   # shape_pt_lat:         float
@@ -9,10 +9,10 @@ defmodule ShapeParser do
 
   alias Feed.Utils.Toolkit
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/shapes.txt"
+  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
-  def shapes(file_path \\ @file_path) do
-    file_path
+  def records(file_path \\ @file_path) do
+    Path.expand("shapes.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Enum.map(fn [
@@ -32,23 +32,19 @@ defmodule ShapeParser do
         dist_traveled: String.to_float(dist_traveled)
       }
     end)
-
-    ShapeParser.shapes()
-    |> Enum.group_by(& &1.shape_id, & &1.coords)
-    |> Enum.map(fn {k, v} -> {k, %Geo.LineString{coordinates: v}} end)
   end
 
   @doc "0) Как много записей в таблице shapes?"
-  def count_table_records, do: shapes() |> Enum.count()
+  def count_table_records, do: records() |> Enum.count()
   # 933327
 
   @doc "1) Сколько всего уникальных shape_id?"
-  def count_uniq_id, do: shapes() |> Toolkit.count_uniq_in(:id)
+  def count_uniq_id, do: records() |> Toolkit.count_uniq_in(:id)
   # 28403
 
   @doc "1) Сколько всего уникальных shape_id + stop_id + pt_sequence?"
   def count_uniq_records do
-    shapes()
+    records()
     |> Enum.uniq_by(&[&1.id, &1.coords, &1.dist_traveled])
   end
 
@@ -56,7 +52,7 @@ defmodule ShapeParser do
 
   @doc "1.1) Какие различные префиксы вcтречаются среди значений shape_id?"
   def shape_id_prefixies do
-    shapes()
+    records()
     |> Enum.frequencies_by(
       &(&1.id
         |> String.split("-")
@@ -67,13 +63,13 @@ defmodule ShapeParser do
   # %{"stage" => 479806, "track" => 453521}
 
   @doc "2) Сколько всего уникальных координат?"
-  def count_uniq_coords, do: shapes() |> Toolkit.count_uniq_in(:coords)
+  def count_uniq_coords, do: records() |> Toolkit.count_uniq_in(:coords)
   # 182459
 
   @doc "3) Нет ли пропущенных или лишних pt_sequence?"
   def check_pt_sequence do
     freqs =
-      shapes()
+      records()
       |> Enum.frequencies_by(& &1.pt_sequence)
       |> Enum.sort_by(&elem(&1, 1), :desc)
       |> Enum.map(&elem(&1, 1))
@@ -89,7 +85,7 @@ defmodule ShapeParser do
   end
 
   def check_pt_order do
-    ShapeParser.shapes()
+    records()
     |> Enum.group_by(& &1.id, & &1.pt_sequence)
     |> Enum.map(fn {k, v} ->
       {k,
@@ -106,7 +102,7 @@ defmodule ShapeParser do
 
   @doc "3.1) Получить координаты маршрута по shape_id"
   def shape_id_coords(shape_id) do
-    shapes()
+    records()
     |> Enum.filter(fn row -> row.id == shape_id end)
     |> Enum.map(& &1.coords)
     |> Toolkit.geojson_string()
