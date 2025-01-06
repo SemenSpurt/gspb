@@ -190,7 +190,7 @@ defmodule Feed.Services.Research.Stops do
     records()
     |> MapSet.new(& &1.id)
     |> MapSet.difference(
-      StopTimesParser.records()
+      records()
       |> MapSet.new(& &1.stop_id)
     )
   end

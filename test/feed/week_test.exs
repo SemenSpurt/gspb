@@ -8,7 +8,19 @@ defmodule Feed.WeekTest do
 
     import Feed.WeekFixtures
 
-    @invalid_attrs %{service_id: nil, monday: nil, tuesday: nil, wednesday: nil, thursday: nil, friday: nil, saturday: nil, sunday: nil, start_date: nil, end_date: nil, service_name: nil}
+    @invalid_attrs %{
+      service_id: nil,
+      monday: nil,
+      tuesday: nil,
+      wednesday: nil,
+      thursday: nil,
+      friday: nil,
+      saturday: nil,
+      sunday: nil,
+      start_date: nil,
+      end_date: nil,
+      service_name: nil
+    }
 
     test "list_days/0 returns all days" do
       days = days_fixture()
@@ -21,7 +33,19 @@ defmodule Feed.WeekTest do
     end
 
     test "create_days/1 with valid data creates a days" do
-      valid_attrs = %{service_id: "some service_id", monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: true, sunday: true, start_date: ~D[2024-11-24], end_date: ~D[2024-11-24], service_name: "some service_name"}
+      valid_attrs = %{
+        service_id: "some service_id",
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: true,
+        start_date: ~D[2024-11-24],
+        end_date: ~D[2024-11-24],
+        service_name: "some service_name"
+      }
 
       assert {:ok, %Days{} = days} = Week.create_days(valid_attrs)
       assert days.service_id == "some service_id"
@@ -43,7 +67,20 @@ defmodule Feed.WeekTest do
 
     test "update_days/2 with valid data updates the days" do
       days = days_fixture()
-      update_attrs = %{service_id: "some updated service_id", monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false, start_date: ~D[2024-11-25], end_date: ~D[2024-11-25], service_name: "some updated service_name"}
+
+      update_attrs = %{
+        service_id: "some updated service_id",
+        monday: false,
+        tuesday: false,
+        wednesday: false,
+        thursday: false,
+        friday: false,
+        saturday: false,
+        sunday: false,
+        start_date: ~D[2024-11-25],
+        end_date: ~D[2024-11-25],
+        service_name: "some updated service_name"
+      }
 
       assert {:ok, %Days{} = days} = Week.update_days(days, update_attrs)
       assert days.service_id == "some updated service_id"

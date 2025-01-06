@@ -25,7 +25,7 @@ defmodule Feed.Services.Import.Calendar do
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def import_calendar(file_path \\ @file_path) do
-    file_path <> "calendar.txt"
+    (file_path <> "calendar.txt")
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [service_id, _, _, _, _, _, _, _, start_date, end_date, name] ->
@@ -41,7 +41,7 @@ defmodule Feed.Services.Import.Calendar do
   end
 
   def import_week(file_path \\ @file_path) do
-    file_path <> "calendar.txt"
+    (file_path <> "calendar.txt")
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [

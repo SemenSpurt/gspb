@@ -16,14 +16,16 @@ defmodule FeedWeb.Router do
     forward "/graphql/editor", Absinthe.Plug.GraphiQL,
       # before_send: {__MODULE__, :before_send},
       # interface: :simple,
-      schema: FeedWeb.Schema
-      # context: %{pubsub: FeedWeb.Endpoint}
+      schema: FeedWeb.Gql.Schema
+
+    # context: %{pubsub: FeedWeb.Endpoint}
 
     forward "/graphql", Absinthe.Plug,
       # before_send: {__MODULE__, :before_send},
       # interface: :simple,
-      schema: FeedWeb.Schema
-      # context: %{pubsub: FeedWeb.Endpoint}
+      schema: FeedWeb.Gql.Schema
+
+    # context: %{pubsub: FeedWeb.Endpoint}
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

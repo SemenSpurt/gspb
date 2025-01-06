@@ -8,7 +8,15 @@ defmodule Feed.TimesTest do
 
     import Feed.TimesFixtures
 
-    @invalid_attrs %{trip_id: nil, arrival_time: nil, departure_time: nil, stop_id: nil, stop_sequence: nil, shape_id: nil, shape_dist_traveled: nil}
+    @invalid_attrs %{
+      trip_id: nil,
+      arrival_time: nil,
+      departure_time: nil,
+      stop_id: nil,
+      stop_sequence: nil,
+      shape_id: nil,
+      shape_dist_traveled: nil
+    }
 
     test "list_times/0 returns all times" do
       time = time_fixture()
@@ -21,7 +29,15 @@ defmodule Feed.TimesTest do
     end
 
     test "create_time/1 with valid data creates a time" do
-      valid_attrs = %{trip_id: 42, arrival_time: ~T[14:00:00], departure_time: ~T[14:00:00], stop_id: 42, stop_sequence: 42, shape_id: "some shape_id", shape_dist_traveled: 120.5}
+      valid_attrs = %{
+        trip_id: 42,
+        arrival_time: ~T[14:00:00],
+        departure_time: ~T[14:00:00],
+        stop_id: 42,
+        stop_sequence: 42,
+        shape_id: "some shape_id",
+        shape_dist_traveled: 120.5
+      }
 
       assert {:ok, %Time{} = time} = Times.create_time(valid_attrs)
       assert time.trip_id == 42
@@ -39,7 +55,16 @@ defmodule Feed.TimesTest do
 
     test "update_time/2 with valid data updates the time" do
       time = time_fixture()
-      update_attrs = %{trip_id: 43, arrival_time: ~T[15:01:01], departure_time: ~T[15:01:01], stop_id: 43, stop_sequence: 43, shape_id: "some updated shape_id", shape_dist_traveled: 456.7}
+
+      update_attrs = %{
+        trip_id: 43,
+        arrival_time: ~T[15:01:01],
+        departure_time: ~T[15:01:01],
+        stop_id: 43,
+        stop_sequence: 43,
+        shape_id: "some updated shape_id",
+        shape_dist_traveled: 456.7
+      }
 
       assert {:ok, %Time{} = time} = Times.update_time(time, update_attrs)
       assert time.trip_id == 43

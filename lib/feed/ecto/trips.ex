@@ -10,7 +10,6 @@ defmodule Feed.Ecto.Trips do
     Ecto.Routes.Route
   }
 
-
   defmodule Trip do
     use Ecto.Schema
     import Ecto.Changeset
@@ -43,10 +42,10 @@ defmodule Feed.Ecto.Trips do
         preload_order: [asc: :shape_pt_sequence]
     end
 
-
     def changeset(trip, attrs) do
       trip
-      |> cast(attrs,
+      |> cast(
+        attrs,
         [
           :route_id,
           :service_id,
@@ -55,18 +54,15 @@ defmodule Feed.Ecto.Trips do
           :shape_id
         ]
       )
-      |> validate_required(
-        [
-          :route_id,
-          :service_id,
-          :trip_id,
-          :direction_id,
-          :shape_id
-        ]
-      )
+      |> validate_required([
+        :route_id,
+        :service_id,
+        :trip_id,
+        :direction_id,
+        :shape_id
+      ])
     end
   end
-
 
   def list_trips do
     Repo.all(Trip)

@@ -8,7 +8,13 @@ defmodule Feed.ShapesTest do
 
     import Feed.ShapesFixtures
 
-    @invalid_attrs %{shape_id: nil, shape_pt_lat: nil, shape_pt_lon: nil, shape_pt_sequence: nil, shape_dist_traveled: nil}
+    @invalid_attrs %{
+      shape_id: nil,
+      shape_pt_lat: nil,
+      shape_pt_lon: nil,
+      shape_pt_sequence: nil,
+      shape_dist_traveled: nil
+    }
 
     test "list_shapes/0 returns all shapes" do
       shape = shape_fixture()
@@ -21,7 +27,13 @@ defmodule Feed.ShapesTest do
     end
 
     test "create_shape/1 with valid data creates a shape" do
-      valid_attrs = %{shape_id: "some shape_id", shape_pt_lat: 120.5, shape_pt_lon: 120.5, shape_pt_sequence: 42, shape_dist_traveled: 120.5}
+      valid_attrs = %{
+        shape_id: "some shape_id",
+        shape_pt_lat: 120.5,
+        shape_pt_lon: 120.5,
+        shape_pt_sequence: 42,
+        shape_dist_traveled: 120.5
+      }
 
       assert {:ok, %Shape{} = shape} = Shapes.create_shape(valid_attrs)
       assert shape.shape_id == "some shape_id"
@@ -37,7 +49,14 @@ defmodule Feed.ShapesTest do
 
     test "update_shape/2 with valid data updates the shape" do
       shape = shape_fixture()
-      update_attrs = %{shape_id: "some updated shape_id", shape_pt_lat: 456.7, shape_pt_lon: 456.7, shape_pt_sequence: 43, shape_dist_traveled: 456.7}
+
+      update_attrs = %{
+        shape_id: "some updated shape_id",
+        shape_pt_lat: 456.7,
+        shape_pt_lon: 456.7,
+        shape_pt_sequence: 43,
+        shape_dist_traveled: 456.7
+      }
 
       assert {:ok, %Shape{} = shape} = Shapes.update_shape(shape, update_attrs)
       assert shape.shape_id == "some updated shape_id"

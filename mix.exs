@@ -37,7 +37,7 @@ defmodule Feed.MixProject do
       {:calendar, "~> 1.0.0"},
       {:dataloader, "~> 1.0.0"},
       {:csv, "~> 3.2"},
-      # {:absinthe, "~> 1.6"},
+      {:absinthe, "~> 1.6"},
       {:absinthe_plug, "~> 1.5"},
       {:nimble_csv, "~> 1.1"},
       {:phoenix, "~> 1.7.14"},

@@ -8,7 +8,19 @@ defmodule Feed.DatesTest do
 
     import Feed.DatesFixtures
 
-    @invalid_attrs %{service_id: nil, monday: nil, tuesday: nil, wednesday: nil, thursday: nil, friday: nil, saturday: nil, sunday: nil, start_date: nil, end_date: nil, service_name: nil}
+    @invalid_attrs %{
+      service_id: nil,
+      monday: nil,
+      tuesday: nil,
+      wednesday: nil,
+      thursday: nil,
+      friday: nil,
+      saturday: nil,
+      sunday: nil,
+      start_date: nil,
+      end_date: nil,
+      service_name: nil
+    }
 
     test "list_dates/0 returns all dates" do
       date = date_fixture()
@@ -21,7 +33,19 @@ defmodule Feed.DatesTest do
     end
 
     test "create_date/1 with valid data creates a date" do
-      valid_attrs = %{service_id: "some service_id", monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: true, sunday: true, start_date: ~D[2024-11-24], end_date: ~D[2024-11-24], service_name: "some service_name"}
+      valid_attrs = %{
+        service_id: "some service_id",
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: true,
+        start_date: ~D[2024-11-24],
+        end_date: ~D[2024-11-24],
+        service_name: "some service_name"
+      }
 
       assert {:ok, %Date{} = date} = Dates.create_date(valid_attrs)
       assert date.service_id == "some service_id"
@@ -43,7 +67,20 @@ defmodule Feed.DatesTest do
 
     test "update_date/2 with valid data updates the date" do
       date = date_fixture()
-      update_attrs = %{service_id: "some updated service_id", monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false, start_date: ~D[2024-11-25], end_date: ~D[2024-11-25], service_name: "some updated service_name"}
+
+      update_attrs = %{
+        service_id: "some updated service_id",
+        monday: false,
+        tuesday: false,
+        wednesday: false,
+        thursday: false,
+        friday: false,
+        saturday: false,
+        sunday: false,
+        start_date: ~D[2024-11-25],
+        end_date: ~D[2024-11-25],
+        service_name: "some updated service_name"
+      }
 
       assert {:ok, %Date{} = date} = Dates.update_date(date, update_attrs)
       assert date.service_id == "some updated service_id"

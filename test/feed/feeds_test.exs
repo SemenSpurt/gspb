@@ -8,7 +8,13 @@ defmodule Feed.FeedsTest do
 
     import Feed.FeedsFixtures
 
-    @invalid_attrs %{agency_id: nil, agency_name: nil, agency_url: nil, agency_phone: nil, agency_timezone: nil}
+    @invalid_attrs %{
+      agency_id: nil,
+      agency_name: nil,
+      agency_url: nil,
+      agency_phone: nil,
+      agency_timezone: nil
+    }
 
     test "list_agencies/0 returns all agencies" do
       agency = agency_fixture()
@@ -21,7 +27,13 @@ defmodule Feed.FeedsTest do
     end
 
     test "create_agency/1 with valid data creates a agency" do
-      valid_attrs = %{agency_id: 42, agency_name: "some agency_name", agency_url: "some agency_url", agency_phone: "some agency_phone", agency_timezone: "some agency_timezone"}
+      valid_attrs = %{
+        agency_id: 42,
+        agency_name: "some agency_name",
+        agency_url: "some agency_url",
+        agency_phone: "some agency_phone",
+        agency_timezone: "some agency_timezone"
+      }
 
       assert {:ok, %Agency{} = agency} = Feeds.create_agency(valid_attrs)
       assert agency.agency_id == 42
@@ -37,7 +49,14 @@ defmodule Feed.FeedsTest do
 
     test "update_agency/2 with valid data updates the agency" do
       agency = agency_fixture()
-      update_attrs = %{agency_id: 43, agency_name: "some updated agency_name", agency_url: "some updated agency_url", agency_phone: "some updated agency_phone", agency_timezone: "some updated agency_timezone"}
+
+      update_attrs = %{
+        agency_id: 43,
+        agency_name: "some updated agency_name",
+        agency_url: "some updated agency_url",
+        agency_phone: "some updated agency_phone",
+        agency_timezone: "some updated agency_timezone"
+      }
 
       assert {:ok, %Agency{} = agency} = Feeds.update_agency(agency, update_attrs)
       assert agency.agency_id == 43

@@ -3,6 +3,7 @@ defmodule Feed.Handlers do
   import Geo.PostGIS
 
   alias Feed.Repo
+
   alias Feed.Ecto.{
     Stops.Stop,
     Routes.Route,
@@ -18,7 +19,6 @@ defmodule Feed.Handlers do
         |> distinct([r], r.transport)
         |> Repo.all()
       else
-        # |> Enum.map(&Atom.to_string(&1))
         args.types
       end
 

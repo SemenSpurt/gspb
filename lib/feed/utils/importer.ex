@@ -92,8 +92,7 @@ defmodule Feed.Utils.Importer do
           returning: true
         )
       )
-      |> Enum.at(0)
-      |> elem(1)
+      |> Enum.flat_map(&elem(&1, 1))
       |> Enum.map(&Map.from_struct(&1))
       |> Enum.map(& &1.service_id)
 

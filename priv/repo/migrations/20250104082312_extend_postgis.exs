@@ -1,8 +1,10 @@
 defmodule Feed.Repo.Migrations.ExtendPostgis do
   use Ecto.Migration
 
-  def change do
+  def up do
     execute("CREATE EXTENSION IF NOT EXISTS postgis;")
-    execute("ALTER EXTENSION postgis UPDATE;")
+  end
+
+  def down do
   end
 end

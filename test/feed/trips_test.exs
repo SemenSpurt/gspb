@@ -8,7 +8,13 @@ defmodule Feed.TripsTest do
 
     import Feed.TripsFixtures
 
-    @invalid_attrs %{route_id: nil, service_id: nil, trip_id: nil, direction_id: nil, shape_id: nil}
+    @invalid_attrs %{
+      route_id: nil,
+      service_id: nil,
+      trip_id: nil,
+      direction_id: nil,
+      shape_id: nil
+    }
 
     test "list_routes/0 returns all routes" do
       trip = trip_fixture()
@@ -21,7 +27,13 @@ defmodule Feed.TripsTest do
     end
 
     test "create_trip/1 with valid data creates a trip" do
-      valid_attrs = %{route_id: 42, service_id: "some service_id", trip_id: 42, direction_id: true, shape_id: 42}
+      valid_attrs = %{
+        route_id: 42,
+        service_id: "some service_id",
+        trip_id: 42,
+        direction_id: true,
+        shape_id: 42
+      }
 
       assert {:ok, %Trip{} = trip} = Trips.create_trip(valid_attrs)
       assert trip.route_id == 42
@@ -37,7 +49,14 @@ defmodule Feed.TripsTest do
 
     test "update_trip/2 with valid data updates the trip" do
       trip = trip_fixture()
-      update_attrs = %{route_id: 43, service_id: "some updated service_id", trip_id: 43, direction_id: false, shape_id: 43}
+
+      update_attrs = %{
+        route_id: 43,
+        service_id: "some updated service_id",
+        trip_id: 43,
+        direction_id: false,
+        shape_id: 43
+      }
 
       assert {:ok, %Trip{} = trip} = Trips.update_trip(trip, update_attrs)
       assert trip.route_id == 43
@@ -70,7 +89,13 @@ defmodule Feed.TripsTest do
 
     import Feed.TripsFixtures
 
-    @invalid_attrs %{route_id: nil, service_id: nil, trip_id: nil, direction_id: nil, shape_id: nil}
+    @invalid_attrs %{
+      route_id: nil,
+      service_id: nil,
+      trip_id: nil,
+      direction_id: nil,
+      shape_id: nil
+    }
 
     test "list_trips/0 returns all trips" do
       trip = trip_fixture()
@@ -83,7 +108,13 @@ defmodule Feed.TripsTest do
     end
 
     test "create_trip/1 with valid data creates a trip" do
-      valid_attrs = %{route_id: 42, service_id: "some service_id", trip_id: 42, direction_id: true, shape_id: 42}
+      valid_attrs = %{
+        route_id: 42,
+        service_id: "some service_id",
+        trip_id: 42,
+        direction_id: true,
+        shape_id: 42
+      }
 
       assert {:ok, %Trip{} = trip} = Trips.create_trip(valid_attrs)
       assert trip.route_id == 42
@@ -99,7 +130,14 @@ defmodule Feed.TripsTest do
 
     test "update_trip/2 with valid data updates the trip" do
       trip = trip_fixture()
-      update_attrs = %{route_id: 43, service_id: "some updated service_id", trip_id: 43, direction_id: false, shape_id: 43}
+
+      update_attrs = %{
+        route_id: 43,
+        service_id: "some updated service_id",
+        trip_id: 43,
+        direction_id: false,
+        shape_id: 43
+      }
 
       assert {:ok, %Trip{} = trip} = Trips.update_trip(trip, update_attrs)
       assert trip.route_id == 43
@@ -132,7 +170,13 @@ defmodule Feed.TripsTest do
 
     import Feed.TripsFixtures
 
-    @invalid_attrs %{route_id: nil, service_id: nil, trip_id: nil, direction_id: nil, shape_id: nil}
+    @invalid_attrs %{
+      route_id: nil,
+      service_id: nil,
+      trip_id: nil,
+      direction_id: nil,
+      shape_id: nil
+    }
 
     test "list_trips/0 returns all trips" do
       trip = trip_fixture()
@@ -145,7 +189,13 @@ defmodule Feed.TripsTest do
     end
 
     test "create_trip/1 with valid data creates a trip" do
-      valid_attrs = %{route_id: 42, service_id: 42, trip_id: 42, direction_id: true, shape_id: "some shape_id"}
+      valid_attrs = %{
+        route_id: 42,
+        service_id: 42,
+        trip_id: 42,
+        direction_id: true,
+        shape_id: "some shape_id"
+      }
 
       assert {:ok, %Trip{} = trip} = Trips.create_trip(valid_attrs)
       assert trip.route_id == 42
@@ -161,7 +211,14 @@ defmodule Feed.TripsTest do
 
     test "update_trip/2 with valid data updates the trip" do
       trip = trip_fixture()
-      update_attrs = %{route_id: 43, service_id: 43, trip_id: 43, direction_id: false, shape_id: "some updated shape_id"}
+
+      update_attrs = %{
+        route_id: 43,
+        service_id: 43,
+        trip_id: 43,
+        direction_id: false,
+        shape_id: "some updated shape_id"
+      }
 
       assert {:ok, %Trip{} = trip} = Trips.update_trip(trip, update_attrs)
       assert trip.route_id == 43

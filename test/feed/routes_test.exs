@@ -8,7 +8,17 @@ defmodule Feed.RoutesTest do
 
     import Feed.RoutesFixtures
 
-    @invalid_attrs %{circular: nil, route_id: nil, agency_id: nil, route_short_name: nil, route_long_name: nil, route_type: nil, transport_type: nil, urban: nil, night: nil}
+    @invalid_attrs %{
+      circular: nil,
+      route_id: nil,
+      agency_id: nil,
+      route_short_name: nil,
+      route_long_name: nil,
+      route_type: nil,
+      transport_type: nil,
+      urban: nil,
+      night: nil
+    }
 
     test "list_routes/0 returns all routes" do
       route = route_fixture()
@@ -21,7 +31,17 @@ defmodule Feed.RoutesTest do
     end
 
     test "create_route/1 with valid data creates a route" do
-      valid_attrs = %{circular: true, route_id: 42, agency_id: 42, route_short_name: "some route_short_name", route_long_name: "some route_long_name", route_type: 42, transport_type: 42, urban: true, night: true}
+      valid_attrs = %{
+        circular: true,
+        route_id: 42,
+        agency_id: 42,
+        route_short_name: "some route_short_name",
+        route_long_name: "some route_long_name",
+        route_type: 42,
+        transport_type: 42,
+        urban: true,
+        night: true
+      }
 
       assert {:ok, %Route{} = route} = Routes.create_route(valid_attrs)
       assert route.circular == true
@@ -41,7 +61,18 @@ defmodule Feed.RoutesTest do
 
     test "update_route/2 with valid data updates the route" do
       route = route_fixture()
-      update_attrs = %{circular: false, route_id: 43, agency_id: 43, route_short_name: "some updated route_short_name", route_long_name: "some updated route_long_name", route_type: 43, transport_type: 43, urban: false, night: false}
+
+      update_attrs = %{
+        circular: false,
+        route_id: 43,
+        agency_id: 43,
+        route_short_name: "some updated route_short_name",
+        route_long_name: "some updated route_long_name",
+        route_type: 43,
+        transport_type: 43,
+        urban: false,
+        night: false
+      }
 
       assert {:ok, %Route{} = route} = Routes.update_route(route, update_attrs)
       assert route.circular == false

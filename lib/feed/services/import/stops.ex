@@ -18,7 +18,7 @@ defmodule Feed.Services.Import.Stops do
   @path_file "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def import_records(file_path \\ @path_file) do
-    file_path <> "stops.txt"
+    (file_path <> "stops.txt")
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [id, _, name, lat, lon, _, _, transport] ->

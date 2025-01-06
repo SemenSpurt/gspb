@@ -6,7 +6,6 @@ defmodule Feed.Ecto.Week do
     Ecto.Calendar.Calendar
   }
 
-
   defmodule Week do
     use Ecto.Schema
     import Ecto.Changeset
@@ -21,16 +20,15 @@ defmodule Feed.Ecto.Week do
       field :saturday, :boolean
       field :sunday, :boolean
 
-
       has_many :calendar, Calendar,
         foreign_key: :name,
         references: :name
     end
 
-
     def changeset(days, attrs) do
       days
-      |> cast(attrs,
+      |> cast(
+        attrs,
         [
           :service_name,
           :monday,
@@ -42,21 +40,18 @@ defmodule Feed.Ecto.Week do
           :sunday
         ]
       )
-      |> validate_required(
-        [
-          :service_name,
-          :monday,
-          :tuesday,
-          :wednesday,
-          :thursday,
-          :friday,
-          :saturday,
-          :sunday
-        ]
-      )
+      |> validate_required([
+        :service_name,
+        :monday,
+        :tuesday,
+        :wednesday,
+        :thursday,
+        :friday,
+        :saturday,
+        :sunday
+      ])
     end
   end
-
 
   def list_days do
     Repo.all(Week)

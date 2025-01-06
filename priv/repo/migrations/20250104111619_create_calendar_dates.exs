@@ -4,8 +4,8 @@ defmodule Feed.Repo.Migrations.CreateCalendarDates do
   def change do
     create table(:calendar_dates) do
       add :service_id, :integer
-      add :date,       :date
-      add :exception,  :integer
+      add :date, :date
+      add :exception, :integer
     end
   end
 end

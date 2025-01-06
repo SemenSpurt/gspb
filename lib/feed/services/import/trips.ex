@@ -15,7 +15,7 @@ defmodule Feed.Services.Import.Trips do
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 
   def import_records(file_path \\ @file_path) do
-    file_path <> "trips.txt"
+    (file_path <> "trips.txt")
     |> File.stream!()
     |> FileParser.parse_stream()
     |> Stream.map(fn [

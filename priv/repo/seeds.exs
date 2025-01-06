@@ -27,9 +27,7 @@
 #   Week,
 # }
 
-
 # NimbleCSV.define(Parser, separator: ",", escape: "\"")
-
 
 # tables = [
 #   {Dates, "/src/feed/calendar_dates.txt"},

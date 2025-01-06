@@ -1,18 +1,10 @@
 defmodule Feed.Ecto.Routes do
   import Ecto.Query, warn: false
-  import Geo.PostGIS
 
   alias Feed.{
     Repo,
-    Ecto.Trips.Trip
-  }
-
-  alias Feed.Ecto.{
-    Trips.Trip,
-    Routes.Route,
-    Shapes.Track,
-    StopTimes.StopTime,
-    Week.Week
+    Ecto.Trips.Trip,
+    Ecto.Routes.Route
   }
 
   defmodule Route do

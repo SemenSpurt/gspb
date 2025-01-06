@@ -1,10 +1,5 @@
-defmodule FeedWeb.AllResolver do
-
+defmodule FeedWeb.Gql.Resolvers.RouteResolver do
   alias Feed.Handlers
-
-  def stops_within_radius(_root, args, _info) do
-    {:ok, Handlers.stops_within_radius(args)}
-  end
 
   def routes_dist_gt(_root, args, _info) do
     {:ok, Handlers.routes_dist_gt(args)}

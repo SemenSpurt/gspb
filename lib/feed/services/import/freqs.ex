@@ -9,11 +9,9 @@ defmodule Feed.Services.Import.Freqs do
 
   alias Feed.{
     Repo,
-    Utils.Toolkit,
-    Ecto.Freqs.Freq
+    Ecto.Freqs.Freq,
+    Services.Research.Frequencies
   }
-
-  alias Feed.Services.Research.Frequencies
 
   @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
 

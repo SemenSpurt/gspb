@@ -8,7 +8,13 @@ defmodule Feed.FreqsTest do
 
     import Feed.FreqsFixtures
 
-    @invalid_attrs %{trip_id: nil, start_time: nil, end_time: nil, headway_secs: nil, exact_times: nil}
+    @invalid_attrs %{
+      trip_id: nil,
+      start_time: nil,
+      end_time: nil,
+      headway_secs: nil,
+      exact_times: nil
+    }
 
     test "list_freqs/0 returns all freqs" do
       freq = freq_fixture()
@@ -21,7 +27,13 @@ defmodule Feed.FreqsTest do
     end
 
     test "create_freq/1 with valid data creates a freq" do
-      valid_attrs = %{trip_id: 42, start_time: ~T[14:00:00], end_time: ~T[14:00:00], headway_secs: 42, exact_times: true}
+      valid_attrs = %{
+        trip_id: 42,
+        start_time: ~T[14:00:00],
+        end_time: ~T[14:00:00],
+        headway_secs: 42,
+        exact_times: true
+      }
 
       assert {:ok, %Freq{} = freq} = Freqs.create_freq(valid_attrs)
       assert freq.trip_id == 42
@@ -37,7 +49,14 @@ defmodule Feed.FreqsTest do
 
     test "update_freq/2 with valid data updates the freq" do
       freq = freq_fixture()
-      update_attrs = %{trip_id: 43, start_time: ~T[15:01:01], end_time: ~T[15:01:01], headway_secs: 43, exact_times: false}
+
+      update_attrs = %{
+        trip_id: 43,
+        start_time: ~T[15:01:01],
+        end_time: ~T[15:01:01],
+        headway_secs: 43,
+        exact_times: false
+      }
 
       assert {:ok, %Freq{} = freq} = Freqs.update_freq(freq, update_attrs)
       assert freq.trip_id == 43

@@ -12,7 +12,6 @@ config :feed, Feed.Repo,
   adapter: Ecto.Adapters.Postgres,
   types: Feed.PostgresTypes
 
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

@@ -12,8 +12,6 @@ defmodule Feed.Ecto.StopTimes do
     import Ecto.Changeset
 
     schema "stop_times" do
-
-
       # embeds_many :check_points, CheckPoint do
       #   belongs_to :stop, Stop,
       #     foreign_key: :stop_id,

@@ -8,7 +8,16 @@ defmodule Feed.StopsTest do
 
     import Feed.StopsFixtures
 
-    @invalid_attrs %{stop_id: nil, stop_code: nil, stop_name: nil, stop_lat: nil, stop_lon: nil, location_type: nil, wheelchair_boarding: nil, transport_type: nil}
+    @invalid_attrs %{
+      stop_id: nil,
+      stop_code: nil,
+      stop_name: nil,
+      stop_lat: nil,
+      stop_lon: nil,
+      location_type: nil,
+      wheelchair_boarding: nil,
+      transport_type: nil
+    }
 
     test "list_stops/0 returns all stops" do
       stop = stop_fixture()
@@ -21,7 +30,16 @@ defmodule Feed.StopsTest do
     end
 
     test "create_stop/1 with valid data creates a stop" do
-      valid_attrs = %{stop_id: 42, stop_code: 42, stop_name: "some stop_name", stop_lat: 120.5, stop_lon: 120.5, location_type: 42, wheelchair_boarding: 42, transport_type: "some transport_type"}
+      valid_attrs = %{
+        stop_id: 42,
+        stop_code: 42,
+        stop_name: "some stop_name",
+        stop_lat: 120.5,
+        stop_lon: 120.5,
+        location_type: 42,
+        wheelchair_boarding: 42,
+        transport_type: "some transport_type"
+      }
 
       assert {:ok, %Stop{} = stop} = Stops.create_stop(valid_attrs)
       assert stop.stop_id == 42
@@ -40,7 +58,17 @@ defmodule Feed.StopsTest do
 
     test "update_stop/2 with valid data updates the stop" do
       stop = stop_fixture()
-      update_attrs = %{stop_id: 43, stop_code: 43, stop_name: "some updated stop_name", stop_lat: 456.7, stop_lon: 456.7, location_type: 43, wheelchair_boarding: 43, transport_type: "some updated transport_type"}
+
+      update_attrs = %{
+        stop_id: 43,
+        stop_code: 43,
+        stop_name: "some updated stop_name",
+        stop_lat: 456.7,
+        stop_lon: 456.7,
+        location_type: 43,
+        wheelchair_boarding: 43,
+        transport_type: "some updated transport_type"
+      }
 
       assert {:ok, %Stop{} = stop} = Stops.update_stop(stop, update_attrs)
       assert stop.stop_id == 43
