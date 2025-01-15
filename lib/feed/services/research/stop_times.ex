@@ -9,13 +9,12 @@ defmodule Feed.Services.Research.StopTimes do
   # shape_dist_traveled:  float :drop
   # """
 
-  alias Feed.Utils.Toolkit
-
-  alias Feed.Services.Research.{
-    Stops
+  alias Feed.Services.{
+    Toolkit,
+    Research.Stops
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("stop_times.txt", file_path)

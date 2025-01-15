@@ -6,5 +6,6 @@ defmodule Feed.Repo.Migrations.ExtendPostgis do
   end
 
   def down do
+    # execute("DROP EXTENSION IF EXISTS postgis;")
   end
 end

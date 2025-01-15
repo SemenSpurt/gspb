@@ -13,11 +13,11 @@ defmodule Feed.Services.Research.Calendar do
   # service_name: string
   # """
 
-  alias Feed.Utils.{
+  alias Feed.Services.{
     Toolkit
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("calendar.txt", file_path)

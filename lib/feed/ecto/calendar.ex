@@ -50,9 +50,8 @@ defmodule Feed.Ecto.Calendar do
     use Ecto.Schema
     import Ecto.Changeset
 
-    # @primary_key {:name, :string, autogenerate: false}
+    @primary_key {:name, :string, autogenerate: false}
     schema "week" do
-      field :name, :string, primary_key: true
       field :monday, :boolean
       field :tuesday, :boolean
       field :wednesday, :boolean

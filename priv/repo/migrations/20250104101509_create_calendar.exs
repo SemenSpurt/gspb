@@ -9,7 +9,7 @@ defmodule Feed.Repo.Migrations.CreateCalendar do
       add :name, :string
     end
 
-    create table(:week) do
+    create table(:week, primary_key: false) do
       add :name, :string, primary_key: true
       add :monday, :boolean
       add :tuesday, :boolean

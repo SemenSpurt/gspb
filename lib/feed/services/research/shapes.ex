@@ -7,9 +7,9 @@ defmodule Feed.Services.Research.Shapes do
   # shape_dist_traveled:  float
   # """
 
-  alias Feed.Utils.Toolkit
+  alias Feed.Services.Toolkit
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("shapes.txt", file_path)

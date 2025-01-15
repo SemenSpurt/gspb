@@ -7,10 +7,12 @@ defmodule Feed.Services.Research.Frequencies do
   # exact_times:  integer  : drop
   # """
 
-  alias Feed.Utils.Toolkit
-  alias Feed.Services.Research.Trips
+  alias Feed.Services.{
+    Toolkit,
+    Research.Trips
+  }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed/"
 
   def records(file_path \\ @file_path) do
     Path.expand("frequencies.txt", file_path)

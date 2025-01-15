@@ -11,10 +11,12 @@ defmodule Feed.Services.Research.Routes do
   #   night:              boolean : drop
   # """
 
-  alias Feed.Utils.Toolkit
-  alias Feed.Services.Research.Trips
+  alias Feed.Services.{
+    Toolkit,
+    Research.Trips
+  }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed/"
 
   def records(file_path \\ @file_path) do
     Path.expand("routes.txt", file_path)

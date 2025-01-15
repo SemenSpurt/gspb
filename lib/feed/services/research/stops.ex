@@ -10,9 +10,9 @@ defmodule Feed.Services.Research.Stops do
   #   transport_type:       string
   # """
 
-  alias Feed.Utils.Toolkit
+  alias Feed.Services.Toolkit
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("stops.txt", file_path)

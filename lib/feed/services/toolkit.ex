@@ -1,4 +1,30 @@
-defmodule Feed.Utils.Toolkit do
+defmodule Feed.Services.Toolkit do
+  alias Feed.{
+    # Ecto,
+    Services.Research.Log
+  }
+
+  # defmodule Response do
+  #   @derive [Poison.Encoder]
+  #   defstruct [
+  #     :result,
+  #     :success
+  #   ]
+  # end
+
+  @url "https://portal.gpt.adc.spb.ru/Portal/transport/internalapi/vehicles/positions/?transports=bus,tram,trolley,ship&bbox=29.498291,60.384005,30.932007,59.684381"
+  def get_state(url \\ @url) do
+    url
+    |> HTTPoison.get!()
+    |> Map.fetch!(:body)
+    |> Poison.decode!()
+    |> Map.fetch!("result")
+    |> Log.parse()
+
+    # |> Map.update!(:result)
+    # |> Enum.map(& Poison.decode!(&1, as: %Log.Log{}))
+  end
+
   @doc "Steam file, parse it and map types"
   def uniparse(file_path, parse_func) do
     file_path
@@ -7,6 +33,7 @@ defmodule Feed.Utils.Toolkit do
     |> Enum.map(parse_func)
   end
 
+  @spec count_uniq_in(any(), any()) :: non_neg_integer()
   @doc "Count unique values in table column"
   def count_uniq_in(table, column) do
     table
@@ -113,5 +140,13 @@ defmodule Feed.Utils.Toolkit do
     |> Enum.reverse()
     |> Enum.join("-")
     |> Date.from_iso8601!()
+  end
+
+  def weekday_atom_from_date(date) do
+    date
+    |> Date.from_iso8601!()
+    |> Calendar.Date.day_of_week_name()
+    |> String.downcase()
+    |> String.to_atom()
   end
 end

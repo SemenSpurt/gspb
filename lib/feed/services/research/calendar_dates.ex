@@ -5,14 +5,13 @@ defmodule Feed.Services.Research.CalendarDates do
   # exception_type: integer
   # """
 
-  alias Feed.Utils.Toolkit
-
-  alias Feed.Services.Research.{
-    Trips,
-    Calendar
+  alias Feed.Services.{
+    Toolkit,
+    Research.Trips,
+    Research.Calendar
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("calendar_dates.txt", file_path)

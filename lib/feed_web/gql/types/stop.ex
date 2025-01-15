@@ -14,7 +14,7 @@ defmodule FeedWeb.Types.Stop do
     field :stops_nearby,
           non_null(list_of(non_null(:stop))) do
       arg :search, :string, default_value: ""
-      arg :radius, :integer, default_value: 2500
+      arg :radius, :integer, default_value: 20
       arg :types, list_of(:string), default_value: []
       arg :coords, list_of(:float), default_value: [30.336146, 59.934243]
       resolve &StopResolver.stops_within_radius/3

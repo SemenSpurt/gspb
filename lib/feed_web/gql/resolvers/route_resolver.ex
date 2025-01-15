@@ -1,5 +1,5 @@
 defmodule FeedWeb.Gql.Resolvers.RouteResolver do
-  alias Feed.Handlers
+  alias Feed.Services.Handlers
 
   def routes_dist_gt(_root, args, _info) do
     {:ok, Handlers.routes_dist_gt(args)}
@@ -19,5 +19,13 @@ defmodule FeedWeb.Gql.Resolvers.RouteResolver do
 
   def route_substitutions(_root, args, _info) do
     {:ok, Handlers.route_substitutions(args)}
+  end
+
+  def inspect_route(_root, args, _info) do
+    {:ok, Handlers.inspect_route(args)}
+  end
+
+  def inspect_trip(_root, args, _info) do
+    {:ok, Handlers.inspect_trip(args)}
   end
 end

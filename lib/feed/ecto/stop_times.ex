@@ -7,29 +7,33 @@ defmodule Feed.Ecto.StopTimes do
     Ecto.Shapes.Stage
   }
 
+  # defmodule CheckPoint do
+  #   use Ecto.Schema
+
+  #   embedded_schema do
+  #   belongs_to :stop, Stop,
+  #     foreign_key: :stop_id,
+  #     references: :id
+
+  #   field :stage_id, :string
+  #   field :arrival_time, :time
+  #   field :departure_time, :time
+  #   field :stop_sequence, :integer
+
+  #   has_many :stages, Stage,
+  #     foreign_key: :stage_id,
+  #     references: :stage_id,
+  #     preload_order: [asc: :shape_pt_sequence]
+  #   end
+  # end
+
   defmodule StopTime do
     use Ecto.Schema
     import Ecto.Changeset
 
     schema "stop_times" do
-      # embeds_many :check_points, CheckPoint do
-      #   belongs_to :stop, Stop,
-      #     foreign_key: :stop_id,
-      #     references: :id
-
-      #   field :shape_id, :string
-      #   field :arrival_time, :time
-      #   field :departure_time, :time
-      #   field :stop_sequence, :integer
-      #   field :shape_dist_traveled, :float
-
-      #   has_many :stages, Stage,
-      #     foreign_key: :stage_id,
-      #     references: :shape_id,
-      #     preload_order: [asc: :shape_pt_sequence]
-      # end
-
       field :trip_id, :integer
+      # embeds_many :check_points, CheckPoint
 
       belongs_to :stop, Stop,
         foreign_key: :stop_id,
@@ -53,6 +57,7 @@ defmodule Feed.Ecto.StopTimes do
         attrs,
         [
           :trip_id,
+          # :check_points
           :arrival_time,
           :departure_time,
           :stop_id,
@@ -63,6 +68,7 @@ defmodule Feed.Ecto.StopTimes do
       )
       |> validate_required([
         :trip_id,
+        # :check_points,
         :arrival_time,
         :departure_time,
         :stop_id,

@@ -7,8 +7,7 @@ defmodule Feed.Services.Research.Trips do
   #   shape_id:       string : может быть это поле доджно быть в routes?
   # """
 
-  alias Feed.Services.Import.StopTimes
-  alias Feed.Utils.Toolkit
+  alias Feed.Services.Toolkit
 
   alias Feed.Services.Research.{
     Routes,
@@ -18,7 +17,7 @@ defmodule Feed.Services.Research.Trips do
     Frequencies
   }
 
-  @file_path "C:/Users/SamJa/Desktop/Notebooks/feed/"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("trips.txt", file_path)
