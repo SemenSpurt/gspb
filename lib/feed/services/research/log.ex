@@ -55,7 +55,7 @@ defmodule Feed.Services.Research.Log do
             entry["position"]["lat"]
           }
         },
-        timestamp: NaiveDateTime.from_iso8601!(entry["timestamp"])
+        timestamp: Date.from_iso8601!(entry["timestamp"])
       }
     end)
   end

@@ -19,7 +19,5 @@ defmodule Feed.Repo.Migrations.CreateCalendar do
       add :saturday, :boolean
       add :sunday, :boolean
     end
-
-    create unique_index(:week, [:name])
   end
 end

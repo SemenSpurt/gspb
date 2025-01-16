@@ -299,7 +299,7 @@ defmodule Feed.Services.Handlers do
   ## V
   @doc "Handler 6 ~ 700 ms) List routes with percent of similarity"
   def route_substitutions(args \\ @args6) do
-    now = Time.utc_now()
+    # now = Time.utc_now()
 
     target =
       Repo.one(
@@ -379,8 +379,8 @@ defmodule Feed.Services.Handlers do
   @def_attrs1 %{
     route_id: 1266,
     day: "2024-11-09",
-    start_time: "19:20:00",
-    end_time: "21:30:00"
+    start_time: "07:00:00",
+    end_time: "14:30:00"
   }
 
   @doc "Inspect route schedule and actual trips appearance"
@@ -401,15 +401,14 @@ defmodule Feed.Services.Handlers do
             t.service_id
           )
 
-    query =
+    trips_stops =
       from s in StopTime,
         where:
           fragment(
             """
               EXISTS (
                 SELECT * FROM ? AS t
-                WHERE t.direction_id
-                AND t.route_id = ?
+                WHERE t.route_id = ?
                 AND t.id = ?
               )
             """,
@@ -419,35 +418,36 @@ defmodule Feed.Services.Handlers do
           )
 
     plan_trips =
-      Repo.all(query)
+      Repo.all(trips_stops)
       |> Enum.group_by(& &1.trip_id)
       |> Enum.map(fn {k, v} ->
         %{
           trip_id: k,
-          first_stop_arrival:
+          start:
             v
             |> Enum.sort_by(& &1.stop_sequence)
             |> Enum.at(0),
-          last_stop_arrival:
+          finish:
             v
             |> Enum.sort_by(& &1.stop_sequence)
             |> Enum.at(-1)
         }
       end)
-      |> Enum.sort_by(& &1.first_stop_arrival)
+      |> Enum.sort_by(& &1.start)
       |> Enum.filter(
-        &(Time.compare(&1.first_stop_arrival.arrival_time, stime) == :gt and
-            Time.compare(&1.first_stop_arrival.arrival_time, etime) == :lt)
+        &(Time.compare(&1.start.arrival_time, stime) == :gt and
+            Time.compare(&1.finish.arrival_time, etime) == :lt)
       )
       |> Enum.map(
         &%{
           trip_id: &1.trip_id,
-          start: &1.first_stop_arrival.arrival_time,
-          finish: &1.last_stop_arrival.arrival_time
+          start: &1.start.arrival_time,
+          finish: &1.finish.arrival_time
         }
       )
       |> Enum.sort_by(& &1.start)
 
+    ####
     actual_starts =
       Repo.all(
         from p in Position,
@@ -469,12 +469,12 @@ defmodule Feed.Services.Handlers do
               "extract(epoch from ? - ?) / 60",
               fragment("?::time", p.timestamp),
               ^stime
-            ) > -10 and
+            ) > -5 and
               fragment(
                 "extract(epoch from ? - ?) / 60",
                 ^etime,
                 fragment("?::time", p.timestamp)
-              ) > -10
+              ) > -5
       )
       |> Enum.group_by(
         & &1.vehicle_id,
@@ -497,7 +497,7 @@ defmodule Feed.Services.Handlers do
                     finish:
                       times
                       |> Enum.map(& &1.time)
-                      |> Enum.at(0)
+                      |> Enum.at(1)
                       |> NaiveDateTime.to_time()
                   }
 
@@ -514,18 +514,41 @@ defmodule Feed.Services.Handlers do
             end)
         }
       end)
-      |> Enum.filter(&(Enum.count(&1.timestamps) == 2))
-      |> Enum.map(
-        &%{
-          trip_id: &1.trip_id,
-          start: &1.timestamps[:start],
-          finish: &1.timestamps[:finish]
+      |> Enum.map(fn each ->
+        %{
+          trip_id: each.trip_id,
+          timestamps:
+            case each.timestamps |> Enum.at(0) |> elem(0) do
+              :finish -> [start: nil] ++ each.timestamps
+              :start -> each.timestamps
+            end
         }
-      )
-      |> Enum.sort_by(& &1.start)
+      end)
+      |> Enum.map(fn each ->
+        %{
+          trip_id: each.trip_id,
+          timestamps:
+            case each.timestamps |> Enum.at(-1) |> elem(0) do
+              :start -> each.timestamps ++ [finish: nil]
+              :finish -> each.timestamps
+            end
+        }
+      end)
+      |> Enum.map(fn each ->
+        each.timestamps
+        |> Enum.chunk_every(2, 2)
+        |> Enum.map(
+          &%{
+            trip_id: each.trip_id,
+            start: &1[:start],
+            finish: &1[:finish]
+          }
+        )
+      end)
+      |> List.flatten()
+      |> Enum.sort_by(&[&1.start, &1.finish])
 
     %{
-      # route: args.route_id,
       plan_trips: plan_trips,
       actual_trips: actual_starts
     }
@@ -534,7 +557,7 @@ defmodule Feed.Services.Handlers do
   end
 
   @def_attrs2 %{
-    trip_id: 64_883_593
+    trip_id: 64_883_343
   }
 
   @doc "Inspect trip stop list and actual stop appearance (400ms)"
@@ -547,21 +570,6 @@ defmodule Feed.Services.Handlers do
           select: t.route_id,
           where: t.id == ^args.trip_id
       )
-
-    trip_stops =
-      Repo.all(
-        from s in StopTime,
-          where: s.trip_id == ^args.trip_id,
-          order_by: s.arrival_time,
-          preload: :stop
-      )
-      |> Enum.map(fn each ->
-        %{
-          order: each.stop_sequence,
-          plan_time: each.arrival_time,
-          point: each.stop.coords
-        }
-      end)
 
     trip_stops =
       Repo.all(

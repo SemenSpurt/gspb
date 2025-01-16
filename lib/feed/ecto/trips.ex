@@ -25,6 +25,7 @@ defmodule Feed.Ecto.Trips do
 
       field :direction_id, :boolean, default: false
       field :track_id, :string
+      field :date, :date
 
       has_many :freqs, Freq,
         foreign_key: :trip_id,

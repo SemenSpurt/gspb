@@ -14,7 +14,7 @@ defmodule Feed.Repo.Migrations.CreateStopTimes do
 
     create_if_not_exists index(:stop_times, [:trip_id, :stop_id])
 
-    create table(:stages, primary_key: false) do
+    create_if_not_exists table(:stages, primary_key: false) do
       add :stage_id, :string, primary_key: true
       add :line, :geography
     end
@@ -22,5 +22,6 @@ defmodule Feed.Repo.Migrations.CreateStopTimes do
 
   def down do
     drop_if_exists table(:stop_times)
+    drop_if_exists table(:stages)
   end
 end

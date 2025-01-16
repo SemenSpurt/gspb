@@ -26,7 +26,7 @@ defmodule Feed.Repo.Migrations.CreateLog do
   end
 
   def down do
-    drop_if_exists table(:vehicles)
-    drop_if_exists table(:positions)
+    # drop_if_exists table(:vehicles)
+    # drop_if_exists table(:positions)
   end
 end

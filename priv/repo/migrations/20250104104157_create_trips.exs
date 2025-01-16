@@ -7,12 +7,11 @@ defmodule Feed.Repo.Migrations.CreateTrips do
       add :track_id, :string, primary_key: true
     end
 
-    create_if_not_exists index(:tracks, [:track_id], unique: true)
-
     create_if_not_exists table(:trips) do
       add :route_id, :integer
       add :service_id, :integer
       add :direction_id, :boolean
+      add :date, :date
 
       add :track_id,
           references(:tracks,
@@ -23,12 +22,10 @@ defmodule Feed.Repo.Migrations.CreateTrips do
     end
 
     create_if_not_exists index(:trips, [:track_id])
-    # create_if_not_exists index(:trips, [:route_id, :id])
   end
 
   def down do
     drop_if_exists table(:trips)
     drop_if_exists table(:tracks)
-
   end
 end
