@@ -53,12 +53,12 @@ defmodule FeedWeb.Types.Route do
     end
 
     @desc "Show routes mean arrival interval on stop specified"
-    field :hourly_mean_arrival,
+    field :route_average_interval,
           non_null(list_of(non_null(:trip_frequencies))) do
       arg :route_id, :integer, default_value: 3812
       arg :stop_id, :integer, default_value: 40382
       arg :day, :string, default_value: "2024-09-02"
-      resolve &RouteResolver.hourly_mean_arrival/3
+      resolve &RouteResolver.route_average_interval/3
     end
 
     @desc "Show routes that go throught two subsequent stops"

@@ -9,8 +9,8 @@ defmodule FeedWeb.Gql.Resolvers.RouteResolver do
     {:ok, Handlers.routes_over_stop(args)}
   end
 
-  def hourly_mean_arrival(_root, args, _info) do
-    {:ok, Handlers.hourly_mean_arrival(args)}
+  def route_average_interval(_root, args, _info) do
+    {:ok, Handlers.route_average_interval(args)}
   end
 
   def routes_between_two_stops(_root, args, _info) do

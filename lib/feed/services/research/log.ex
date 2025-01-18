@@ -55,7 +55,7 @@ defmodule Feed.Services.Research.Log do
             entry["position"]["lat"]
           }
         },
-        timestamp: Date.from_iso8601!(entry["timestamp"])
+        timestamp: NaiveDateTime.from_iso8601!(entry["timestamp"])
       }
     end)
   end
@@ -73,7 +73,7 @@ defmodule Feed.Services.Research.Log do
       ])
     )
     |> Enum.chunk_every(1000)
-    |> Enum.map(
+    |> Enum.each(
       &Repo.insert_all(
         Ecto.Logs.Vehicles.Vehicle,
         &1,
@@ -95,7 +95,7 @@ defmodule Feed.Services.Research.Log do
       ])
     )
     |> Enum.chunk_every(1000)
-    |> Enum.map(
+    |> Enum.each(
       &Repo.insert_all(
         Ecto.Logs.Positions.Position,
         &1,
