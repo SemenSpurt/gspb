@@ -380,7 +380,7 @@ defmodule Feed.Services.Handlers do
 
     trips_stops =
       from st in StopTime,
-        distinct: st.trip_id,
+        # distinct: st.trip_id,
         join: t in Trip,
         on: t.id == st.trip_id,
         where: t.route_id == ^args.route,
@@ -395,7 +395,7 @@ defmodule Feed.Services.Handlers do
             subquery(filter_services(args.day)),
             t.service_id
           ),
-        # ## WHERE date BETWEEN dt1, dt2 ?
+        ## WHERE date BETWEEN dt1, dt2 ?
         where:
           fragment(
             "? > ? ",
@@ -439,104 +439,104 @@ defmodule Feed.Services.Handlers do
       )
       |> Enum.sort_by(& &1.start)
 
-    ####
-    # actual_starts =
-    #   Repo.all(
-    #     from p in Position,
-    #       join: v in Vehicle,
-    #       on: v.vehicle_id == p.vehicle_id,
-    #       where: v.route_id == ^to_string(args.route),
-    #       where:
-    #         fragment(
-    #           "? - ? > -5 * interval '1 minute'",
-    #           fragment("?::time", p.timestamp),
-    #           ^stime
-    #         ),
-    #       where:
-    #         fragment(
-    #           "? - ? < 5 * interval '1 minute'",
-    #           fragment("?::time", p.timestamp),
-    #           ^etime
-    #         )
-    #   )
-    #   |> Enum.group_by(
-    #     & &1.vehicle_id,
-    #     &%{
-    #       time: &1.timestamp,
-    #       direction: &1.direction_id
-    #     }
-    #   )
-    #   |> Enum.map(fn {k, v} ->
-    #     %{
-    #       trip_id: k,
-    #       timestamps:
-    #         v
-    #         |> Enum.sort_by(& &1.time)
-    #         |> Enum.chunk_every(2, 1, :discard)
-    #         |> Enum.filter(fn [x, y] -> x.direction != y.direction end)
-    #         |> Enum.map(fn times ->
-    #           case times |> Enum.map(& &1.direction) do
-    #             [true, false] ->
-    #               %{
-    #                 finish:
-    #                   times
-    #                   |> Enum.map(& &1.time)
-    #                   |> Enum.at(0)
-    #                   |> NaiveDateTime.to_time()
-    #               }
+    ###
+    actual_starts =
+      Repo.all(
+        from p in Position,
+          join: v in Vehicle,
+          on: v.vehicle_id == p.vehicle_id,
+          where: v.route_id == ^to_string(args.route),
+          where:
+            fragment(
+              "? - ? > -5 * interval '1 minute'",
+              fragment("?::time", p.timestamp),
+              ^stime
+            ),
+          where:
+            fragment(
+              "? - ? < 5 * interval '1 minute'",
+              fragment("?::time", p.timestamp),
+              ^etime
+            )
+      )
+      |> Enum.group_by(
+        & &1.vehicle_id,
+        &%{
+          time: &1.timestamp,
+          direction: &1.direction_id
+        }
+      )
+      |> Enum.map(fn {k, v} ->
+        %{
+          trip_id: k,
+          timestamps:
+            v
+            |> Enum.sort_by(& &1.time)
+            |> Enum.chunk_every(2, 1, :discard)
+            |> Enum.filter(fn [x, y] -> x.direction != y.direction end)
+            |> Enum.map(fn times ->
+              case times |> Enum.map(& &1.direction) do
+                [true, false] ->
+                  %{
+                    finish:
+                      times
+                      |> Enum.map(& &1.time)
+                      |> Enum.at(0)
+                      |> NaiveDateTime.to_time()
+                  }
 
-    #             [false, true] ->
-    #               %{
-    #                 start:
-    #                   times
-    #                   |> Enum.map(& &1.time)
-    #                   |> Enum.at(0)
-    #                   |> NaiveDateTime.to_time()
-    #               }
-    #           end
-    #           |> Enum.reduce(&Map.merge/2)
-    #         end)
-    #     }
-    #   end)
-    #   |> Enum.filter(&(&1.timestamps != []))
-    #   |> Enum.map(fn each ->
-    #     %{
-    #       trip: each.trip_id,
-    #       timestamps:
-    #         case each.timestamps |> Enum.at(0) |> elem(0) do
-    #           :finish -> [start: nil] ++ each.timestamps
-    #           :start -> each.timestamps
-    #         end
-    #     }
-    #   end)
-    #   |> Enum.map(fn each ->
-    #     %{
-    #       trip: each.trip,
-    #       timestamps:
-    #         case each.timestamps |> Enum.at(-1) |> elem(0) do
-    #           :start -> each.timestamps ++ [finish: nil]
-    #           :finish -> each.timestamps
-    #         end
-    #     }
-    #   end)
-    #   |> Enum.map(fn each ->
-    #     each.timestamps
-    #     |> Enum.chunk_every(2, 2)
-    #     |> Enum.map(
-    #       &%{
-    #         trip: each.trip,
-    #         start: &1[:start],
-    #         finish: &1[:finish]
-    #       }
-    #     )
-    #   end)
-    #   |> List.flatten()
-    #   |> Enum.sort_by(&[&1.start, &1.finish])
+                [false, true] ->
+                  %{
+                    start:
+                      times
+                      |> Enum.map(& &1.time)
+                      |> Enum.at(0)
+                      |> NaiveDateTime.to_time()
+                  }
+              end
+              |> Enum.reduce(&Map.merge/2)
+            end)
+        }
+      end)
+      |> Enum.filter(&(&1.timestamps != []))
+      |> Enum.map(fn each ->
+        %{
+          trip: each.trip_id,
+          timestamps:
+            case each.timestamps |> Enum.at(0) |> elem(0) do
+              :finish -> [start: nil] ++ each.timestamps
+              :start -> each.timestamps
+            end
+        }
+      end)
+      |> Enum.map(fn each ->
+        %{
+          trip: each.trip,
+          timestamps:
+            case each.timestamps |> Enum.at(-1) |> elem(0) do
+              :start -> each.timestamps ++ [finish: nil]
+              :finish -> each.timestamps
+            end
+        }
+      end)
+      |> Enum.map(fn each ->
+        each.timestamps
+        |> Enum.chunk_every(2, 2)
+        |> Enum.map(
+          &%{
+            trip: each.trip,
+            start: &1[:start],
+            finish: &1[:finish]
+          }
+        )
+      end)
+      |> List.flatten()
+      |> Enum.sort_by(&[&1.start, &1.finish])
 
-    # %{
-    #   plan_trips: plan_trips,
-    #   actual_trips: actual_starts
-    # }
+    %{
+      plan_trips: plan_trips,
+      actual_trips: actual_starts
+    }
 
     # Time.diff(Time.utc_now(), now, :millisecond)
   end
