@@ -33,6 +33,7 @@ config :feed, Feed.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configures Elixir's Logger
 config :logger, :console,
+  # level: :info,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 

@@ -17,7 +17,7 @@ defmodule Feed.Services.Research.Trips do
     Frequencies
   }
 
-  @file_path "src/feed_14.09.2023"
+  @file_path "src/feed"
 
   def records(file_path \\ @file_path) do
     Path.expand("trips.txt", file_path)
@@ -42,7 +42,8 @@ defmodule Feed.Services.Research.Trips do
              |> String.split("/")
              |> Enum.at(-1)
              |> String.ends_with?("feed") do
-              Date.utc_today()
+            #   Date.utc_today()
+            Date.from_iso8601!("2025-01-19")
           else
             Toolkit.get_date_from_filepath(file_path)
           end

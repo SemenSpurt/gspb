@@ -56,22 +56,22 @@ defmodule Feed.Services.Handlers do
     types: [],
     search: "",
     dist_gt: 100_000,
-    day: "2024-10-10"
+    day: "2024-06-12"
   }
 
   ## V
   @doc "Handler 2 ~ 400ms) List routes with total distance gt ^dist_gt"
   def routes_dist_gt(args \\ @args2) do
-    # now = Time.utc_now()
+    now = Time.utc_now()
 
     types = process_transport_types(args.types, Route)
 
     filter_routes =
       from r in Route,
         distinct: r.id,
-        left_join: t in Trip,
+        join: t in Trip,
         on: t.route_id == r.id,
-        left_join: tr in Track,
+        join: tr in Track,
         on: tr.track_id == t.track_id,
         where: r.transport in ^types,
         where: ilike(r.long_name, ^"%#{args.search}%"),
@@ -88,57 +88,39 @@ defmodule Feed.Services.Handlers do
             t.service_id
           )
 
-    Repo.all(filter_routes)
-    # Time.diff(Time.utc_now(), now, :millisecond)
-  end
+    # where:
+    #   fragment(
+    #     """
+    #       EXISTS (
+    #         SELECT
+    #           t.route_id,
+    #           t.track_id
+    #         FROM ? AS t
+    #         WHERE t.route_id = ?
+    #         AND EXISTS (
+    #           SELECT
+    #             tr.track_id,
+    #             tr.line
+    #           FROM tracks AS tr
+    #           WHERE tr.track_id = t.track_id
+    #           AND st_length(tr.line) > ?
 
-  @doc "Handler 2 ~ 400ms) List routes with total distance gt ^dist_gt"
-  def routes_dist_gt1(args \\ @args2) do
-    # now = Time.utc_now()
-
-    types = process_transport_types(args.types, Route)
-
-    filter_trips =
-      from t in Trip,
-        select: t.route_id,
-        distinct: t.route_id,
-        join: tr in Track,
-        on: tr.track_id == t.track_id,
-        where:
-          fragment(
-            """
-              EXISTS (
-                SELECT service_id FROM ?
-                WHERE service_id = ?
-              )
-            """,
-            subquery(filter_services(args.day)),
-            t.service_id
-          ),
-        where: st_length(tr.line) > ^args.dist_gt
-
-    filter_routes =
-      from r in Route,
-        where: r.transport in ^types,
-        where: ilike(r.long_name, ^"%#{args.search}%"),
-        where:
-          fragment(
-            """
-              EXISTS (
-                SELECT route_id FROM ?
-                WHERE route_id = ?
-              )
-            """,
-            subquery(filter_trips),
-            r.id
-          )
+    #         )
+    #       )
+    #     """,
+    #     subquery(filter_trips(args.day)),
+    #     r.id,
+    #     ^args.dist_gt
+    #   )
 
     Repo.all(filter_routes)
-    # Time.diff(Time.utc_now(), now, :millisecond)
+    |> Enum.sort_by(& &1.short_name)
+
+    Time.diff(Time.utc_now(), now, :millisecond)
   end
 
   @args3 %{
-    stop_id: 35116,
+    stop_id: 18103,
     day: "2024-06-15"
   }
 
@@ -173,8 +155,8 @@ defmodule Feed.Services.Handlers do
   end
 
   @args4 %{
-    route_id: 3812,
-    stop_id: 40382,
+    route_id: 7466,
+    stop_id: 27204,
     day: "2024-11-10"
   }
 
@@ -227,13 +209,13 @@ defmodule Feed.Services.Handlers do
   @args5 %{
     stop_id1: 31925,
     stop_id2: 27774,
-    day: "2024-11-03"
+    day: "2024-06-08"
   }
 
   ## V
   @doc "Handler 5 ~ 650ms) List routes between two subsequent stops"
   def routes_between_two_stops(args \\ @args5) do
-    # now = Time.utc_now()
+    now = Time.utc_now()
 
     filter_routes =
       from r in Route,
@@ -272,21 +254,76 @@ defmodule Feed.Services.Handlers do
     Repo.all(filter_routes)
     |> Enum.sort_by(fn x -> String.to_integer(x.short_name) end)
 
-    # Time.diff(Time.utc_now(), now, :millisecond)
+    Time.diff(Time.utc_now(), now, :millisecond)
   end
 
   @args6 %{
     route_id: 9286,
-    percent: 65,
+    percent: 25,
     day: "2024-06-16"
   }
 
   ## V
   @doc "Handler 6 ~ 700 ms) List routes with percent of similarity"
-  def route_substitutions(args \\ @args6) do
-    # now = Time.utc_now()
+  def route_substitutions1(args \\ @args6) do
+    now = Time.utc_now()
 
-    target =
+    query =
+      from r in Route,
+        distinct: r.id,
+        join: t in Trip,
+        on: t.route_id == r.id,
+        where:
+          fragment(
+            """
+              EXISTS (
+                SELECT service_id FROM ?
+                WHERE service_id = ?
+              )
+            """,
+            subquery(filter_services(args.day)),
+            t.service_id
+          ),
+        where:
+          fragment(
+            """
+              EXISTS (
+                WITH target AS (
+                  SELECT DISTINCT ON (t1.route_id)
+                    st_buffer(t.line, 5) AS line,
+                    st_length(t.line) * ? * 0.01 AS dist
+                  FROM tracks AS t
+                  JOIN trips AS t1
+                  ON t1.track_id = t.track_id
+                  WHERE t1.route_id = ?
+                  AND t1.direction_id
+                )
+                SELECT *
+                FROM trips AS t
+                JOIN tracks AS t1
+                ON t1.track_id = t.track_id
+                WHERE t.route_id != ?
+                AND t.route_id = ?
+                AND st_length(
+                  st_intersection(t1.line,(SELECT line FROM target))
+                  ) > (SELECT dist FROM target)
+              )
+            """,
+            ^args.percent,
+            ^args.route_id,
+            ^args.route_id,
+            r.id
+          )
+
+    Repo.all(query)
+
+    Time.diff(Time.utc_now(), now, :millisecond)
+  end
+
+  def route_substitutions(args \\ @args6) do
+    now = Time.utc_now()
+
+    target_route =
       Repo.one(
         from t in Track,
           select: %{
@@ -300,7 +337,7 @@ defmodule Feed.Services.Handlers do
           where: t1.direction_id
       )
 
-    dist = target.len * args.percent * 0.01
+    dist = target_route.len * args.percent * 0.01
 
     filter_routes =
       from r in Route,
@@ -310,7 +347,7 @@ defmodule Feed.Services.Handlers do
         join: tr in Track,
         on: tr.track_id == t.track_id,
         where: r.id != ^args.route_id,
-        where: st_length(st_intersection(tr.line, ^target.line)) > ^dist,
+        where: st_length(st_intersection(tr.line, ^target_route.line)) > ^dist,
         where:
           fragment(
             """
@@ -324,14 +361,14 @@ defmodule Feed.Services.Handlers do
           )
 
     Repo.all(filter_routes)
-    # Time.diff(Time.utc_now(), now, :millisecond)
+    Time.diff(Time.utc_now(), now, :millisecond)
   end
 
   @def_attrs1 %{
     route: 1266,
     stime: "08:00:00",
     etime: "09:00:00",
-    day: "2024-11-29"
+    day: "2024-12-29"
   }
 
   @doc "Inspect route schedule and actual trips appearance"
@@ -343,6 +380,7 @@ defmodule Feed.Services.Handlers do
 
     trips_stops =
       from st in StopTime,
+        distinct: st.trip_id,
         join: t in Trip,
         on: t.id == st.trip_id,
         where: t.route_id == ^args.route,
@@ -357,16 +395,16 @@ defmodule Feed.Services.Handlers do
             subquery(filter_services(args.day)),
             t.service_id
           ),
-        ## WHERE date BETWEEN dt1, dt2 ?
+        # ## WHERE date BETWEEN dt1, dt2 ?
         where:
           fragment(
-            "? - ? < -5 * interval '1 minute'",
+            "? > ? ",
             fragment("?::time", st.arrival_time),
             ^stime
           ),
         where:
           fragment(
-            "? - ? > 5 * interval '1 minute'",
+            "? < ?",
             fragment("?::time", st.arrival_time),
             ^etime
           )
@@ -402,103 +440,103 @@ defmodule Feed.Services.Handlers do
       |> Enum.sort_by(& &1.start)
 
     ####
-    actual_starts =
-      Repo.all(
-        from p in Position,
-          join: v in Vehicle,
-          on: v.vehicle_id == p.vehicle_id,
-          where: v.route_id == ^to_string(args.route),
-          where:
-            fragment(
-              "? - ? > -5 * interval '1 minute'",
-              fragment("?::time", p.timestamp),
-              ^stime
-            ),
-          where:
-            fragment(
-              "? - ? < 5 * interval '1 minute'",
-              fragment("?::time", p.timestamp),
-              ^etime
-            )
-      )
-      |> Enum.group_by(
-        & &1.vehicle_id,
-        &%{
-          time: &1.timestamp,
-          direction: &1.direction_id
-        }
-      )
-      |> Enum.map(fn {k, v} ->
-        %{
-          trip_id: k,
-          timestamps:
-            v
-            |> Enum.sort_by(& &1.time)
-            |> Enum.chunk_every(2, 1, :discard)
-            |> Enum.filter(fn [x, y] -> x.direction != y.direction end)
-            |> Enum.map(fn times ->
-              case times |> Enum.map(& &1.direction) do
-                [true, false] ->
-                  %{
-                    finish:
-                      times
-                      |> Enum.map(& &1.time)
-                      |> Enum.at(0)
-                      |> NaiveDateTime.to_time()
-                  }
+    # actual_starts =
+    #   Repo.all(
+    #     from p in Position,
+    #       join: v in Vehicle,
+    #       on: v.vehicle_id == p.vehicle_id,
+    #       where: v.route_id == ^to_string(args.route),
+    #       where:
+    #         fragment(
+    #           "? - ? > -5 * interval '1 minute'",
+    #           fragment("?::time", p.timestamp),
+    #           ^stime
+    #         ),
+    #       where:
+    #         fragment(
+    #           "? - ? < 5 * interval '1 minute'",
+    #           fragment("?::time", p.timestamp),
+    #           ^etime
+    #         )
+    #   )
+    #   |> Enum.group_by(
+    #     & &1.vehicle_id,
+    #     &%{
+    #       time: &1.timestamp,
+    #       direction: &1.direction_id
+    #     }
+    #   )
+    #   |> Enum.map(fn {k, v} ->
+    #     %{
+    #       trip_id: k,
+    #       timestamps:
+    #         v
+    #         |> Enum.sort_by(& &1.time)
+    #         |> Enum.chunk_every(2, 1, :discard)
+    #         |> Enum.filter(fn [x, y] -> x.direction != y.direction end)
+    #         |> Enum.map(fn times ->
+    #           case times |> Enum.map(& &1.direction) do
+    #             [true, false] ->
+    #               %{
+    #                 finish:
+    #                   times
+    #                   |> Enum.map(& &1.time)
+    #                   |> Enum.at(0)
+    #                   |> NaiveDateTime.to_time()
+    #               }
 
-                [false, true] ->
-                  %{
-                    start:
-                      times
-                      |> Enum.map(& &1.time)
-                      |> Enum.at(0)
-                      |> NaiveDateTime.to_time()
-                  }
-              end
-              |> Enum.reduce(&Map.merge/2)
-            end)
-        }
-      end)
-      |> Enum.filter(&(&1.timestamps != []))
-      |> Enum.map(fn each ->
-        %{
-          trip: each.trip_id,
-          timestamps:
-            case each.timestamps |> Enum.at(0) |> elem(0) do
-              :finish -> [start: nil] ++ each.timestamps
-              :start -> each.timestamps
-            end
-        }
-      end)
-      |> Enum.map(fn each ->
-        %{
-          trip: each.trip,
-          timestamps:
-            case each.timestamps |> Enum.at(-1) |> elem(0) do
-              :start -> each.timestamps ++ [finish: nil]
-              :finish -> each.timestamps
-            end
-        }
-      end)
-      |> Enum.map(fn each ->
-        each.timestamps
-        |> Enum.chunk_every(2, 2)
-        |> Enum.map(
-          &%{
-            trip: each.trip,
-            start: &1[:start],
-            finish: &1[:finish]
-          }
-        )
-      end)
-      |> List.flatten()
-      |> Enum.sort_by(&[&1.start, &1.finish])
+    #             [false, true] ->
+    #               %{
+    #                 start:
+    #                   times
+    #                   |> Enum.map(& &1.time)
+    #                   |> Enum.at(0)
+    #                   |> NaiveDateTime.to_time()
+    #               }
+    #           end
+    #           |> Enum.reduce(&Map.merge/2)
+    #         end)
+    #     }
+    #   end)
+    #   |> Enum.filter(&(&1.timestamps != []))
+    #   |> Enum.map(fn each ->
+    #     %{
+    #       trip: each.trip_id,
+    #       timestamps:
+    #         case each.timestamps |> Enum.at(0) |> elem(0) do
+    #           :finish -> [start: nil] ++ each.timestamps
+    #           :start -> each.timestamps
+    #         end
+    #     }
+    #   end)
+    #   |> Enum.map(fn each ->
+    #     %{
+    #       trip: each.trip,
+    #       timestamps:
+    #         case each.timestamps |> Enum.at(-1) |> elem(0) do
+    #           :start -> each.timestamps ++ [finish: nil]
+    #           :finish -> each.timestamps
+    #         end
+    #     }
+    #   end)
+    #   |> Enum.map(fn each ->
+    #     each.timestamps
+    #     |> Enum.chunk_every(2, 2)
+    #     |> Enum.map(
+    #       &%{
+    #         trip: each.trip,
+    #         start: &1[:start],
+    #         finish: &1[:finish]
+    #       }
+    #     )
+    #   end)
+    #   |> List.flatten()
+    #   |> Enum.sort_by(&[&1.start, &1.finish])
 
-    %{
-      plan_trips: plan_trips,
-      actual_trips: actual_starts
-    }
+    # %{
+    #   plan_trips: plan_trips,
+    #   actual_trips: actual_starts
+    # }
 
     # Time.diff(Time.utc_now(), now, :millisecond)
   end
@@ -509,7 +547,7 @@ defmodule Feed.Services.Handlers do
 
   @doc "Inspect stop list and actual stop appearance for trip specified (400ms)"
   def inspect_trip(args \\ @def_attrs2) do
-    now = Time.utc_now()
+    # now = Time.utc_now()
 
     route =
       Repo.one(
@@ -571,6 +609,7 @@ defmodule Feed.Services.Handlers do
           Repo.one(
             from p in Position,
               select: fragment("?::time", p.timestamp),
+              # where: fragment("?::date", p.timestamp) == ^Date.from_iso8601!("2025-01-19"),
               where: p.vehicle_id == ^vehicle.id,
               where: p.order_number == ^vehicle.order,
               order_by: [
@@ -587,7 +626,7 @@ defmodule Feed.Services.Handlers do
       }
     end)
 
-    Time.diff(Time.utc_now(), now, :millisecond)
+    # Time.diff(Time.utc_now(), now, :millisecond)
   end
 
   defp process_transport_types(types, model) do
@@ -602,16 +641,12 @@ defmodule Feed.Services.Handlers do
     case types do
       [] ->
         model_types
-        |> MapSet.to_list()
 
       _ ->
         model_types
-        |> MapSet.intersection(
-          types
-          |> MapSet.new()
-        )
-        |> MapSet.to_list()
+        |> MapSet.intersection(MapSet.new(types))
     end
+    |> MapSet.to_list()
   end
 
   defp filter_services(date) do

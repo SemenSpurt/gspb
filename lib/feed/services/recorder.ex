@@ -7,7 +7,16 @@ defmodule Feed.Services.Recorder do
     # Client
 
     def start_link(default) when is_list(default) do
-      GenServer.start_link(__MODULE__, default)
+      GenServer.start_link(
+        __MODULE__,
+        default,
+        debug: [
+          {
+            :log_to_file,
+            Path.absname("./log.txt")
+          }
+        ]
+      )
     end
 
     # Server (callbacks)
