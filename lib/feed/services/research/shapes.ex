@@ -15,18 +15,18 @@ defmodule Feed.Services.Research.Shapes do
     Path.expand("shapes.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
-                     id,
-                     pt_lat,
-                     pt_lon,
-                     pt_sequence,
-                     dist_traveled
-                   ] ->
+    |> Stream.map(fn [
+                       id,
+                       pt_lat,
+                       pt_lon,
+                       pt_sequence,
+                       dist_traveled
+                     ] ->
       %{
         shape_id: String.trim(id),
         coords: {
-          String.to_float(pt_lon),
-          String.to_float(pt_lat)
+          String.to_float(pt_lat),
+          String.to_float(pt_lon)
         },
         pt_sequence: String.to_integer(pt_sequence),
         dist_traveled: String.to_float(dist_traveled)

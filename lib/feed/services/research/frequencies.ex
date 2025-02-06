@@ -18,13 +18,13 @@ defmodule Feed.Services.Research.Frequencies do
     Path.expand("frequencies.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
-                     trip_id,
-                     start_time,
-                     end_time,
-                     headway_secs,
-                     _
-                   ] ->
+    |> Stream.map(fn [
+                       trip_id,
+                       start_time,
+                       end_time,
+                       headway_secs,
+                       _
+                     ] ->
       %{
         trip_id: String.to_integer(trip_id),
         start_time: Toolkit.time_from_seconds_after_midnight(start_time),

@@ -18,23 +18,23 @@ defmodule Feed.Services.Research.Stops do
     Path.expand("stops.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
-                     id,
-                     _,
-                     name,
-                     lat,
-                     lon,
-                     _,
-                     _,
-                     transport
-                   ] ->
+    |> Stream.map(fn [
+                       id,
+                       _,
+                       name,
+                       lat,
+                       lon,
+                       _,
+                       _,
+                       transport
+                     ] ->
       %{
-        id: String.to_integer(id),
+        stop_id: String.to_integer(id),
         name: String.trim(name),
         coords: %Geo.Point{
           coordinates: {
-            String.to_float(lon),
-            String.to_float(lat)
+            String.to_float(lat),
+            String.to_float(lon)
           }
         },
         transport: String.trim(transport)

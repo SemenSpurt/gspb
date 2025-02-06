@@ -18,7 +18,11 @@ defmodule Feed.Application do
       # Start a worker by calling: Feed.Worker.start_link(arg)
       # {Feed.Worker, arg},
       # Start to serve requests, typically the last entry
-      FeedWeb.Endpoint
+      FeedWeb.Endpoint,
+      # {Feed.GenServer.CsvRecorder, []},
+      # {Feed.GenServer.CsvToDatabase, %{}}
+      # {Feed.GenServer.FeedDownload, []}
+      # {Feed.GenServer.Realtime, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

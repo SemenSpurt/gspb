@@ -20,7 +20,7 @@ defmodule Feed.Services.Research.StopTimes do
     Path.expand("stop_times.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
+    |> Stream.map(fn [
                      trip_id,
                      arrival_time,
                      departure_time,

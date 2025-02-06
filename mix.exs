@@ -31,8 +31,7 @@ defmodule Feed.MixProject do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [
-      {:poison, "~> 6.0"},
+    [ {:timex, "~> 3.7.11"},
       {:httpoison, "~> 2.0"},
       {:geo_postgis, "~> 3.7"},
       {:math, "~> 0.6.0"},

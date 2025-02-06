@@ -23,30 +23,19 @@ defmodule Feed.Services.Research.Trips do
     Path.expand("trips.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
-                     route_id,
-                     service_id,
-                     id,
-                     direction_id,
-                     track_id
-                   ] ->
+    |> Stream.map(fn [
+                       route_id,
+                       service_id,
+                       id,
+                       direction_id,
+                       track_id
+                     ] ->
       %{
         route_id: String.to_integer(route_id),
         service_id: String.to_integer(service_id),
-        id: String.to_integer(id),
+        trip_id: String.to_integer(id),
         direction_id: String.to_integer(direction_id) == 1,
-        track_id: String.trim(track_id),
-        date:
-          if file_path
-             |> String.trim("/")
-             |> String.split("/")
-             |> Enum.at(-1)
-             |> String.ends_with?("feed") do
-            #   Date.utc_today()
-            Date.from_iso8601!("2025-01-19")
-          else
-            Toolkit.get_date_from_filepath(file_path)
-          end
+        track_id: String.trim(track_id)
       }
     end)
   end

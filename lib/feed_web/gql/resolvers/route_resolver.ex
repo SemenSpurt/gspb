@@ -1,5 +1,5 @@
 defmodule FeedWeb.Gql.Resolvers.RouteResolver do
-  alias Feed.Services.Handlers
+  alias Feed.Handlers
 
   def routes_dist_gt(_root, args, _info) do
     {:ok, Handlers.routes_dist_gt(args)}

@@ -22,19 +22,19 @@ defmodule Feed.Services.Research.Routes do
     Path.expand("routes.txt", file_path)
     |> File.stream!()
     |> FileParser.parse_stream()
-    |> Enum.map(fn [
-                     id,
-                     _,
-                     short_name,
-                     long_name,
-                     _,
-                     transport,
-                     circular,
-                     urban,
-                     _
-                   ] ->
+    |> Stream.map(fn [
+                       id,
+                       _,
+                       short_name,
+                       long_name,
+                       _,
+                       transport,
+                       circular,
+                       urban,
+                       _
+                     ] ->
       %{
-        id: String.to_integer(id),
+        route_id: String.to_integer(id),
         # agency: String.trim(agency),
         short_name: String.trim(short_name),
         long_name: String.trim(long_name),

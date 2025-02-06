@@ -18,13 +18,14 @@ defmodule FeedWeb.Types.Route do
 
   object :route_inspection do
     field :plan_trips, list_of(:trip_edges)
-    field :actual_trips, list_of(:trip_edges)
+    field :real_trips, list_of(:trip_edges)
   end
 
   object :trip_edges do
     field :trip_id, :integer
-    field :start, :string
-    field :finish, :string
+    field :direction, :boolean
+    field :stime, :string
+    field :etime, :string
   end
 
   object :trip_inspection do
@@ -86,10 +87,10 @@ defmodule FeedWeb.Types.Route do
     """
     field :inspect_route,
           non_null(list_of(non_null(list_of(non_null(:route_inspection))))) do
-      arg :route_id, :integer, default_value: 1266
-      arg :day, :string, default_value: "2024-11-09"
-      arg :start_time, :string, default_value: "19:20:00"
-      arg :end_time, :string, default_value: "21:30:00"
+      arg :route, :integer, default_value: 1062
+      # arg :day, :string, default_value: "2024-11-09"
+      arg :stime, :string, default_value: "12:00:00"
+      arg :etime, :string, default_value: "20:00:00"
       resolve &RouteResolver.inspect_route/3
     end
 
