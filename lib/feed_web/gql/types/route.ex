@@ -31,7 +31,7 @@ defmodule FeedWeb.Types.Route do
   object :trip_inspection do
     field :order, :integer
     field :plan_time, :string
-    field :actual_time, :string
+    field :real_time, :string
   end
 
   object :route_queries do
@@ -90,7 +90,7 @@ defmodule FeedWeb.Types.Route do
       arg :route, :integer, default_value: 1062
       # arg :day, :string, default_value: "2024-11-09"
       arg :stime, :string, default_value: "12:00:00"
-      arg :etime, :string, default_value: "20:00:00"
+      arg :etime, :string, default_value: "18:00:00"
       resolve &RouteResolver.inspect_route/3
     end
 

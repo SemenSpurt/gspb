@@ -71,7 +71,7 @@ defmodule Feed.GenServer.CsvToDatabase do
 
     case files do
       [] ->
-        state.routes
+        (["3812"] ++ state.routes)
         |> Enum.map(
           &(%{
               route: &1,

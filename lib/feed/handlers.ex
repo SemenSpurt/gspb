@@ -556,17 +556,17 @@ defmodule Feed.Handlers do
     # Time.diff(Time.utc_now(), now, :millisecond)
   end
 
-  def inspect_trip(trip \\ 68_660_264) do
+  def inspect_trip(args \\ %{trip_id: 65_021_202}) do
     [trip_route, direction] =
       Repo.one(
         from t in Trip,
           select: [t.route_id, t.direction_id],
-          where: t.trip_id == ^trip
+          where: t.trip_id == ^args.trip_id
       )
 
     trip_stops =
       from st in StopTime,
-        where: st.trip_id == ^trip,
+        where: st.trip_id == ^args.trip_id,
         join: s in Stop,
         on: s.stop_id == st.stop_id,
         select: %{
@@ -585,8 +585,11 @@ defmodule Feed.Handlers do
         select: %{
           route_id: t.route_id,
           trip_id: t.trip_id,
-          stime: t.start,
-          etime: t.finish
+          direction: t.direction,
+          stime: t.stime,
+          etime: t.etime,
+          sstop: t.sstop,
+          estop: t.estop
         },
         where: t.route_id == ^to_string(trip_route),
         where: t.direction == ^direction,
@@ -596,7 +599,7 @@ defmodule Feed.Handlers do
               ABS(EXTRACT(epoch FROM ?::time - ?::time) / 60)
             """,
             ^sstop.arrival_time,
-            t.start
+            t.stime
           ),
         limit: 1
 
@@ -647,10 +650,21 @@ defmodule Feed.Handlers do
           vehicle_id: p.id,
           position: p.position,
           time: p.time,
+          density:
+            row_number()
+            |> over(
+              partition_by: st.order,
+              order_by:
+                fragment(
+                  "st_distance(?, ?)",
+                  st.stop,
+                  p.position
+                )
+            ),
           direction:
             fragment(
               """
-                st_distance(?, ?) <= st_distance(?, ?)
+                st_distance(?, ?) < st_distance(?, ?)
               """,
               st.stop,
               p.position,
@@ -662,34 +676,56 @@ defmodule Feed.Handlers do
 
     final_query =
       from e in subquery(realtime_to_plan),
-        where:
-          fragment(
-            """
-              EXISTS (
-                SELECT * FROM ? as n
-                WHERE n.order = ?
-                AND n.position = ?
-              )
-            """,
-            subquery(
-              from e in subquery(realtime_to_plan),
-                select: %{
-                  order: e.order,
-                  position: e.position,
-                  stop: e.stop
-                },
-                distinct: e.order,
-                where: e.direction,
-                order_by:
-                  fragment(
-                    "st_distance(?, ?)",
-                    e.stop,
-                    e.position
-                  )
-            ),
-            e.order,
-            e.position
-          )
+        select: %{
+          order: e.order,
+          plan_time: e.arrival_time,
+          real_time: e.time
+        },
+        where: e.density == 1
+
+    # select: %{
+    #   trip_id: e.trip_id,
+    #   arrival_time: e.arrival_time,
+    #   stop: e.stop,
+    #   order: e.order,
+    #   vehicle_id: e.vehicle_id,
+    #   position: e.position,
+    #   time: e.time,
+    #   distance: e.distance,
+    #   direction: e.direction
+    # },
+    # where:
+    #   fragment(
+    #     """
+    #       EXISTS (
+    #         SELECT * FROM ? as n
+    #         WHERE n.order = ?
+    #         AND n.time = ?
+    #       )
+    #     """,
+    #     subquery(
+    #       from e in subquery(realtime_to_plan),
+    #         select: %{
+    #           order: e.order,
+    #           distance: fragment("? as distance", min(e.distance)),
+    #           time: fragment("? as time", min(e.time))
+    #           # position: e.position,
+    #           # stop: e.stop
+    #         },
+    #         group_by: e.order,
+    #         where: e.direction
+    #       # order_by: [
+    #       #   e.order,
+    #       #   fragment(
+    #       #     "st_distance(?, ?)",
+    #       #     e.stop,
+    #       #     e.position
+    #       #   )
+    #       # ]
+    #     ),
+    #     e.order,
+    #     e.time
+    #   )
 
     Repo.all(final_query)
   end
