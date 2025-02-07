@@ -660,16 +660,6 @@ defmodule Feed.Handlers do
                   st.stop,
                   p.position
                 )
-            ),
-          direction:
-            fragment(
-              """
-                st_distance(?, ?) < st_distance(?, ?)
-              """,
-              st.stop,
-              p.position,
-              st.stop,
-              lag(p.position, 1, p.position) |> over(:w)
             )
         },
         windows: [w: [order_by: p.time]]
@@ -682,50 +672,6 @@ defmodule Feed.Handlers do
           real_time: e.time
         },
         where: e.density == 1
-
-    # select: %{
-    #   trip_id: e.trip_id,
-    #   arrival_time: e.arrival_time,
-    #   stop: e.stop,
-    #   order: e.order,
-    #   vehicle_id: e.vehicle_id,
-    #   position: e.position,
-    #   time: e.time,
-    #   distance: e.distance,
-    #   direction: e.direction
-    # },
-    # where:
-    #   fragment(
-    #     """
-    #       EXISTS (
-    #         SELECT * FROM ? as n
-    #         WHERE n.order = ?
-    #         AND n.time = ?
-    #       )
-    #     """,
-    #     subquery(
-    #       from e in subquery(realtime_to_plan),
-    #         select: %{
-    #           order: e.order,
-    #           distance: fragment("? as distance", min(e.distance)),
-    #           time: fragment("? as time", min(e.time))
-    #           # position: e.position,
-    #           # stop: e.stop
-    #         },
-    #         group_by: e.order,
-    #         where: e.direction
-    #       # order_by: [
-    #       #   e.order,
-    #       #   fragment(
-    #       #     "st_distance(?, ?)",
-    #       #     e.stop,
-    #       #     e.position
-    #       #   )
-    #       # ]
-    #     ),
-    #     e.order,
-    #     e.time
-    #   )
 
     Repo.all(final_query)
   end
