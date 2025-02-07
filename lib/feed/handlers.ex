@@ -10,7 +10,6 @@ defmodule Feed.Handlers do
   alias Feed.Ecto.{
     Trip,
     Stop,
-    Stage,
     Track,
     Route,
     Calendar,
@@ -226,7 +225,9 @@ defmodule Feed.Handlers do
               from t in Track,
                 select:
                   fragment(
-                    "? as line, ? as len",
+                    """
+                      ? as line, ? as len
+                    """,
                     st_buffer(t.line, 10),
                     st_length(t.line) * ^args.percent * 0.01
                   ),
@@ -253,11 +254,8 @@ defmodule Feed.Handlers do
         dynamic([p], p.timestamp > ^args.stime)
       end
 
-    route_line =
-      route_line(
-        args.route,
-        true in route_directions(args.route)
-      )
+    direction = true in route_directions(args.route)
+    route_line = route_line(args.route, direction)
 
     lagging =
       from p in "route_#{args.route}",
@@ -265,7 +263,15 @@ defmodule Feed.Handlers do
           id: p.vehicle_id,
           time: p.timestamp,
           position: p.position,
-          drop:
+          projection:
+            fragment(
+              """
+                ST_LineLocatePoint(?, ?)
+              """,
+              ^route_line,
+              p.position
+            ),
+          lag_position:
             fragment(
               """
                 ? = ? AND ? != ?
@@ -308,26 +314,11 @@ defmodule Feed.Handlers do
           id: t.id,
           time: t.time,
           position: t.position,
-          projection:
-            fragment(
-              "ST_LineLocatePoint(?, ?)",
-              ^route_line,
-              t.position
-            )
-        },
-        where: not t.drop
-
-    redundant_edges =
-      from t in subquery(uniq_positions),
-        select: %{
-          id: t.id,
-          time: t.time,
-          position: t.position,
           projection: t.projection,
           start:
             fragment(
               """
-                ? < ? AND ? < 0.025
+                ? < ? AND ? < 0.05
               """,
               t.projection,
               lead(t.projection, 3, t.projection) |> over(:w),
@@ -336,7 +327,7 @@ defmodule Feed.Handlers do
           finish:
             fragment(
               """
-                ? > ? AND ? > 0.975
+                ? > ? AND ? > 0.95
               """,
               t.projection,
               lag(t.projection, 3, t.projection) |> over(:w),
@@ -349,12 +340,14 @@ defmodule Feed.Handlers do
             order_by: t.time
           ]
         ],
-        where:
-          (t.projection < 1 and t.projection > 0.95) or
-            (t.projection > 0 and t.projection < 0.05)
+        where: not t.lag_position,
+        # where: t.projection < 1 and t.projection > 0,
+        where: t.projection > 0.95 or t.projection < 0.05
+
+    # Repo.all(uniq_positions)
 
     edges =
-      from t in subquery(redundant_edges),
+      from t in subquery(uniq_positions),
         select: %{
           id: t.id,
           time: t.time,
@@ -362,10 +355,33 @@ defmodule Feed.Handlers do
           finish: t.finish,
           position: t.position,
           projection: t.projection,
+          direction:
+            fragment(
+              """
+              CASE
+                WHEN ? AND ? >= ? THEN TRUE
+                WHEN ? AND ? <= ? THEN FALSE
+                WHEN ? AND ? >= ? THEN TRUE
+                WHEN ? AND ? <= ? THEN FALSE
+              END
+              """,
+              t.start,
+              t.projection,
+              lag(t.projection, 1, t.projection) |> over(:w),
+              t.start,
+              t.projection,
+              lag(t.projection, 1, t.projection) |> over(:w),
+              t.finish,
+              t.projection,
+              lag(t.projection, 1, t.projection) |> over(:w),
+              t.finish,
+              t.projection,
+              lag(t.projection, 1, t.projection) |> over(:w)
+            ),
           redundant:
             fragment(
               """
-                EXTRACT(epoch FROM ?::time - ?::time) / 60 < 1
+                EXTRACT(epoch FROM ?::time - ?::time) / 60 < 3
                 AND ? != ?
               """,
               lead(t.time, 1, t.time) |> over(:w),
@@ -391,10 +407,13 @@ defmodule Feed.Handlers do
       v
       |> Enum.sort_by(& &1.time)
       |> Enum.chunk_every(2, 1, :discard)
-      |> Enum.filter(fn [x, y] -> x.start != y.start end)
+      |> Enum.filter(fn [x, y] ->
+        x.start != y.start and
+          x.finish != y.finish
+      end)
       |> Enum.map(
         &Enum.map(&1, fn x ->
-          if x.start and not x.finish do
+          if x.start do
             %{stime: x.time, sstop: x.position}
           else
             %{etime: x.time, estop: x.position}
@@ -402,26 +421,39 @@ defmodule Feed.Handlers do
         end)
       )
       |> Enum.map(fn [x, y] -> Map.merge(x, y) end)
-      |> Enum.map(
-        &%{
-          trip_id: k,
-          route_id: args.route,
-          direction: &1.stime < &1.etime,
-          stime: &1.stime,
-          etime: &1.etime,
-          sstop: &1.sstop,
-          estop: &1.estop
-        }
-      )
+      |> Enum.map(fn x ->
+        if x.stime < x.etime do
+          %{
+            trip_id: k,
+            route_id: args.route,
+            direction: true,
+            stime: x.stime,
+            etime: x.etime,
+            sstop: x.sstop,
+            estop: x.estop
+          }
+        else
+          %{
+            trip_id: k,
+            route_id: args.route,
+            direction: false,
+            stime: x.etime,
+            etime: x.stime,
+            sstop: x.estop,
+            estop: x.sstop
+          }
+        end
+      end)
     end)
     |> List.flatten()
+    |> Enum.filter(&(&1.direction or direction))
   end
 
   # route: 4095,
   @def_attrs1 %{
-    route: 2172,
-    stime: "12:00:00",
-    etime: "20:00:00"
+    route: 1829,
+    stime: "10:00:00",
+    etime: "12:00:00"
   }
 
   @doc "Inspect route schedule and actual trips appearance"
@@ -524,7 +556,7 @@ defmodule Feed.Handlers do
     # Time.diff(Time.utc_now(), now, :millisecond)
   end
 
-  def get_trip(trip \\ 68_660_264) do
+  def inspect_trip(trip \\ 68_660_264) do
     [trip_route, direction] =
       Repo.one(
         from t in Trip,
